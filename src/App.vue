@@ -664,6 +664,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import qrcode from 'qrcode-generator'
 import HelloKitty from './components/HelloKitty.vue'
 import BowMark from './components/BowMark.vue'
 import { buildShareLink, decodeMenu, encodeMenu } from './lib/share-code'
@@ -679,6 +680,8 @@ const MIN_FOODS = 2
 const WHEEL_MAX = 330
 const SPIN_MS = 4600
 const DAY_MS = 86400000
+/* 二维码/兜底用的正式站点地址；本地开发时不会把 localhost 印到分享图上 */
+const CANONICAL_URL = 'https://yhx-yhx.github.io/seven-food/'
 
 /* 三套主题：转盘扇形、按钮渐变、指针爱心、页面背景 */
 const THEMES = [
@@ -948,6 +951,15 @@ function randomInt(max) {
 function getWindowSize() {
   if (typeof window === 'undefined') return { width: 375, height: 812 }
   return { width: window.innerWidth, height: window.innerHeight }
+}
+
+function siteUrl() {
+  if (typeof location === 'undefined') return CANONICAL_URL
+  const host = location.hostname
+  if (!host || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host.endsWith('.local')) {
+    return CANONICAL_URL
+  }
+  return location.origin + location.pathname
 }
 
 /* ------------------------------------------------------------------ */
@@ -1896,6 +1908,27 @@ const POSTER_THEMES = {
   }
 }
 
+function drawQrCode(ctx, text, x, y, size) {
+  const qr = qrcode(0, 'M')
+  qr.addData(text)
+  qr.make()
+  const count = qr.getModuleCount()
+  const quiet = 4
+  const total = count + quiet * 2
+  const cell = size / total
+  ctx.fillStyle = '#3f2b47'
+  for (let row = 0; row < count; row += 1) {
+    for (let col = 0; col < count; col += 1) {
+      if (!qr.isDark(row, col)) continue
+      const px = Math.round(x + (col + quiet) * cell)
+      const py = Math.round(y + (row + quiet) * cell)
+      const pw = Math.round(x + (col + quiet + 1) * cell) - px
+      const ph = Math.round(y + (row + quiet + 1) * cell) - py
+      ctx.fillRect(px, py, pw, ph)
+    }
+  }
+}
+
 async function drawPoster(ctx, food) {
   const width = 1080
   const height = 1440
@@ -2018,33 +2051,58 @@ async function drawPoster(ctx, food) {
   ctx.lineWidth = 2
   ctx.setLineDash([10, 12])
   ctx.beginPath()
-  ctx.moveTo(180, 1136)
-  ctx.lineTo(900, 1136)
+  ctx.moveTo(150, 1076)
+  ctx.lineTo(930, 1076)
   ctx.stroke()
   ctx.setLineDash([])
 
+  /* 左侧品牌信息 */
+  ctx.textAlign = 'left'
   ctx.fillStyle = '#8f6f95'
-  ctx.font = `700 32px ${family}`
-  ctx.fillText('今天吃什么 · Sweet Choice', width / 2, 1206)
+  ctx.font = `700 30px ${family}`
+  ctx.fillText('今天吃什么 · Sweet Choice', 150, 1150)
 
   ctx.fillStyle = '#bda3c5'
   ctx.font = `400 24px ${family}`
-  ctx.fillText('每天都要好好吃饭 ♡', width / 2, 1258)
+  ctx.fillText('每天都要好好吃饭 ♡', 150, 1198)
 
-  const accent = ctx.createLinearGradient(0, 0, width, 0)
+  ctx.fillStyle = '#c3a6cc'
+  ctx.font = `400 20px ${family}`
+  ctx.fillText(siteUrl().replace(/^https?:\/\//, '').replace(/\/$/, ''), 150, 1242)
+
+  const accent = ctx.createLinearGradient(150, 0, 420, 0)
   accent.addColorStop(0, palette.accentA)
   accent.addColorStop(1, palette.accentB)
   ctx.fillStyle = accent
-  roundRectPath(ctx, width / 2 - 90, 1300, 180, 8, 4)
+  roundRectPath(ctx, 150, 1276, 150, 7, 4)
   ctx.fill()
 
+  /* 右侧二维码：扫码打开本站 */
+  const qrSize = 176
+  const qrX = 776
+  const qrY = 1104
+  ctx.save()
+  ctx.shadowColor = 'rgba(120, 76, 145, 0.14)'
+  ctx.shadowBlur = 18
+  ctx.shadowOffsetY = 6
+  ctx.fillStyle = '#ffffff'
+  roundRectPath(ctx, qrX - 14, qrY - 14, qrSize + 28, qrSize + 28, 20)
+  ctx.fill()
+  ctx.restore()
+  drawQrCode(ctx, siteUrl(), qrX, qrY, qrSize)
+
+  ctx.textAlign = 'center'
+  ctx.fillStyle = '#b193b9'
+  ctx.font = `500 20px ${family}`
+  ctx.fillText('扫码开转', qrX + qrSize / 2, qrY + qrSize + 40)
+
   ctx.font = `400 44px ${family}`
-  ctx.globalAlpha = 0.5
+  ctx.globalAlpha = 0.45
   ctx.fillStyle = '#e6a5c2'
-  ctx.fillText('♥', 158, 1090)
+  ctx.fillText('♥', 200, 1058)
   ctx.fillStyle = '#c2a0dd'
   ctx.font = `400 30px ${family}`
-  ctx.fillText('✦', 900, 1070)
+  ctx.fillText('✦', 930, 1048)
   ctx.fillText('✦', 176, 470)
   ctx.globalAlpha = 1
 }
@@ -3780,7 +3838,7 @@ onBeforeUnmount(() => {
   display: block;
 }
 .lede-row {
-  width: 100%;
+  width: auto;
   padding: 0;
   border: 0;
   background: none;
@@ -4192,6 +4250,37 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: reduce) {
   .hub.is-settled {
     animation: none !important;
+  }
+}
+
+/* 窄屏（iPhone SE 等）收紧顶部，避免标题换行 */
+@media (max-width: 360px) {
+  .title {
+    font-size: 23px;
+  }
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 15px;
+  }
+  .brand-kitty {
+    width: 30px;
+    height: 30px;
+  }
+  .topbar-actions {
+    gap: 6px;
+  }
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .icon-edit,
+  .icon-gear {
+    width: 17px;
+    height: 17px;
+  }
+  .lede-row {
+    margin-left: 54px;
   }
 }
 
