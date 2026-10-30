@@ -508,7 +508,7 @@
         <div class="result-links">
           <button type="button" class="result-link" @click="rejectResult">不想吃这个 · 换一个 ↺</button>
           <span class="result-link-dot"></span>
-          <button type="button" class="result-link" @click="shareResult">分享给朋友 ♡</button>
+          <button type="button" class="result-link" @click="openShare">分享给朋友 ♡</button>
         </div>
         <span class="confetti c1">♥</span>
         <span class="confetti c2">✦</span>
@@ -516,6 +516,130 @@
         <span class="confetti c4">✦</span>
       </div>
     </div>
+    <!-- 分享方式 -->
+    <div class="mask" :class="{ show: shareOpen }" @click="closeShare">
+      <div class="sheet share-sheet" data-panel="share" tabindex="-1" role="dialog" aria-modal="true" aria-label="分享这一餐" @click.stop>
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <div class="sheet-titles">
+            <span class="sheet-eyebrow">Share</span>
+            <span class="sheet-title">分享这一餐</span>
+            <span class="sheet-sub">把今天的好运气发给朋友</span>
+          </div>
+          <button type="button" class="sheet-close" aria-label="关闭" @click="closeShare">✕</button>
+        </div>
+
+        <div class="share-options">
+          <button type="button" class="share-option" @click="shareLinkOption">
+            <span class="share-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 13.8a3.6 3.6 0 0 0 5.1 0l2.9-2.9a3.6 3.6 0 0 0-5.1-5.1l-1.4 1.4" stroke="#9A6AA2" stroke-width="1.7" stroke-linecap="round" />
+                <path d="M14 10.2a3.6 3.6 0 0 0-5.1 0L6 13.1a3.6 3.6 0 0 0 5.1 5.1l1.4-1.4" stroke="#9A6AA2" stroke-width="1.7" stroke-linecap="round" />
+              </svg>
+            </span>
+            <span class="share-option-text">
+              <span class="share-option-title">分享链接</span>
+              <span class="share-option-hint">朋友打开就能一起转</span>
+            </span>
+            <span class="share-chev">›</span>
+          </button>
+
+          <button type="button" class="share-option" @click="shareImageOption">
+            <span class="share-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3.2" y="4.6" width="17.6" height="14.8" rx="3" stroke="#9A6AA2" stroke-width="1.7" />
+                <circle cx="8.6" cy="9.6" r="1.5" fill="#EB9AB9" />
+                <path d="M4.4 17.2l4.7-4.4 3.2 2.8 3-3.2 4.3 4.6" stroke="#9A6AA2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <span class="share-option-text">
+              <span class="share-option-title">分享图片</span>
+              <span class="share-option-hint">先预览，再决定发不发</span>
+            </span>
+            <span class="share-chev">›</span>
+          </button>
+        </div>
+
+        <p class="share-tip">{{ shareTip }}</p>
+
+        <button type="button" class="share-cancel" @click="closeShare">取消</button>
+      </div>
+    </div>
+
+    <!-- 分享图片预览 -->
+    <div class="poster-mask" :class="{ show: posterOpen }" @click="closePoster">
+      <div class="poster-panel" data-panel="poster" tabindex="-1" role="dialog" aria-modal="true" aria-label="分享图片预览" @click.stop>
+        <div class="poster-head">
+          <span class="poster-title">分享图片</span>
+          <button type="button" class="sheet-close" aria-label="关闭预览" @click="closePoster">✕</button>
+        </div>
+        <div class="poster-frame">
+          <img v-if="posterUrl" :src="posterUrl" class="poster-img" alt="今天吃什么的分享图片预览" />
+          <div v-else class="poster-loading">
+            <span class="poster-spinner"></span>
+            <span>正在生成…</span>
+          </div>
+        </div>
+        <div class="poster-actions">
+          <button
+            v-if="canSharePoster"
+            type="button"
+            class="btn ghost"
+            :disabled="!posterUrl"
+            @click="savePoster"
+          >保存图片</button>
+          <button
+            v-if="canSharePoster"
+            type="button"
+            class="btn solid"
+            :disabled="!posterUrl"
+            @click="sharePoster"
+          >分享图片</button>
+          <template v-else>
+            <button
+              type="button"
+              class="btn ghost"
+              :disabled="!posterUrl"
+              @click="copyLinkFromPoster"
+            >复制链接</button>
+            <button
+              type="button"
+              class="btn solid"
+              :disabled="!posterUrl"
+              @click="savePoster"
+            >保存图片</button>
+          </template>
+        </div>
+        <p class="poster-hint">{{ saveHint }}</p>
+      </div>
+    </div>
+
+    <!-- 手动复制兜底 -->
+    <div class="mask" :class="{ show: manualOpen }" @click="closeManualCopy">
+      <div class="sheet copy-sheet" data-panel="copy" tabindex="-1" role="dialog" aria-modal="true" aria-label="手动复制" @click.stop>
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <div class="sheet-titles">
+            <span class="sheet-eyebrow">Copy</span>
+            <span class="sheet-title">手动复制</span>
+            <span class="sheet-sub">长按下面的内容，全选后复制</span>
+          </div>
+          <button type="button" class="sheet-close" aria-label="关闭" @click="closeManualCopy">✕</button>
+        </div>
+        <textarea
+          class="copy-area"
+          readonly
+          :value="manualText"
+          aria-label="需要复制的内容"
+          @focus="$event.target.select()"
+        ></textarea>
+        <div class="prompt-actions">
+          <button type="button" class="btn ghost" @click="closeManualCopy">关闭</button>
+          <button type="button" class="btn solid" @click="retryManualCopy">再试一次</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 通用确认框 -->
     <div v-if="dialog" class="confirm-mask" role="dialog" aria-modal="true" aria-labelledby="confirm-title" @click.self="closeDialog">
       <div class="confirm-card" data-panel="confirm" tabindex="-1">
@@ -868,6 +992,12 @@ const dialog = ref(null)
 const shareCode = ref('')
 const importOpen = ref(false)
 const importText = ref('')
+const shareOpen = ref(false)
+const posterOpen = ref(false)
+const posterUrl = ref('')
+const posterBlob = ref(null)
+const manualOpen = ref(false)
+const manualText = ref('')
 const nowHour = ref(new Date().getHours())
 
 let spinTimer = null
@@ -883,6 +1013,34 @@ const timeSlot = computed(() => slotForHour(nowHour.value))
 const palette = computed(() => {
   const found = THEMES.find((item) => item.id === theme.value)
   return (found || THEMES[0]).palette
+})
+
+const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+const isWeChat = /MicroMessenger/i.test(ua)
+const isIOS =
+  /iPad|iPhone|iPod/.test(ua) ||
+  (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+
+const canSharePoster = computed(() => {
+  if (isWeChat) return false
+  if (typeof navigator === 'undefined' || typeof navigator.canShare !== 'function') return false
+  try {
+    const probe = new File([new Blob(['x'], { type: 'image/png' })], 'probe.png', { type: 'image/png' })
+    return navigator.canShare({ files: [probe] })
+  } catch (e) {
+    return false
+  }
+})
+
+const shareTip = computed(() => {
+  if (isWeChat) return '微信内请点右上角 ··· 发送给朋友，或长按图片保存'
+  return '会打开系统分享面板，选微信即可发送'
+})
+
+const saveHint = computed(() => {
+  if (isWeChat) return '长按图片保存，再打开微信发送给朋友'
+  if (isIOS) return '点保存图片，或长按图片存到相册'
+  return '点保存图片，或长按图片保存到相册'
 })
 
 const wheelSize = computed(() => {
@@ -1519,14 +1677,44 @@ function currentShareCode() {
   return shareCode.value
 }
 
+function openManualCopy(text) {
+  manualText.value = String(text || '')
+  manualOpen.value = true
+  focusPanel('copy')
+}
+
+function closeManualCopy() {
+  manualOpen.value = false
+}
+
+async function retryManualCopy() {
+  const ok = await copyText(manualText.value)
+  if (ok) {
+    closeManualCopy()
+    showToast('已复制 ♡')
+    return
+  }
+  showToast('还是没有复制权限，长按上面的内容手动复制')
+}
+
 async function copyShareCode() {
-  const ok = await copyText(currentShareCode())
-  showToast(ok ? '分享码已复制 ♡' : '复制失败，长按输入框手动复制')
+  const code = currentShareCode()
+  const ok = await copyText(code)
+  if (ok) {
+    showToast('分享码已复制 ♡')
+    return
+  }
+  openManualCopy(code)
 }
 
 async function copyShareLink() {
-  const ok = await copyText(buildShareLink(currentShareCode()))
-  showToast(ok ? '分享链接已复制，发给朋友吧 ♡' : '复制失败，请手动复制分享码')
+  const link = buildShareLink(currentShareCode())
+  const ok = await copyText(link)
+  if (ok) {
+    showToast('分享链接已复制，发给朋友吧 ♡')
+    return
+  }
+  openManualCopy(link)
 }
 
 function openImport() {
@@ -1556,11 +1744,39 @@ function applyImportedMenu(list) {
   showToast(`已导入 ${list.length} 道菜 ♡`)
 }
 
-async function shareResult() {
+function openShare() {
+  if (!resultFood.value) return
+  toastVisible.value = false
+  shareOpen.value = true
+  focusPanel('share')
+}
+
+function closeShare() {
+  shareOpen.value = false
+}
+
+async function shareLinkOption() {
+  closeShare()
+  await shareResultLink()
+}
+
+async function shareResultLink() {
   const picked = resultFood.value
   if (!picked) return
   const url = typeof location !== 'undefined' ? location.origin + location.pathname : ''
   const text = `今天吃「${picked.name}」！转盘替我选的，不许反悔 ♡`
+
+  /* 微信内置浏览器不支持 Web Share，引导用右上角菜单转发 */
+  if (isWeChat) {
+    const ok = await copyText(url)
+    if (ok) {
+      showToast('链接已复制，点右上角 ··· 发送给朋友')
+      return
+    }
+    openManualCopy(url)
+    return
+  }
+
   if (navigator.share) {
     try {
       await navigator.share({ title: '今天吃什么', text, url })
@@ -1570,7 +1786,333 @@ async function shareResult() {
     }
   }
   const ok = await copyText(`${text} ${url}`)
-  showToast(ok ? '已复制，去粘贴给朋友吧 ♡' : '分享失败，可以截图发给朋友')
+  if (ok) {
+    showToast('已复制，去粘贴给朋友吧 ♡')
+    return
+  }
+  openManualCopy(url)
+}
+
+async function copyLinkFromPoster() {
+  const url = typeof location !== 'undefined' ? location.origin + location.pathname : ''
+  const ok = await copyText(url)
+  if (ok) {
+    showToast(isWeChat ? '链接已复制，点右上角 ··· 发送给朋友' : '链接已复制，去粘贴给朋友吧 ♡')
+    return
+  }
+  openManualCopy(url)
+}
+
+async function shareImageOption() {
+  if (!resultFood.value) return
+  shareOpen.value = false
+  posterOpen.value = true
+  focusPanel('poster')
+  await buildPoster()
+}
+
+function closePoster() {
+  posterOpen.value = false
+  if (posterUrl.value) {
+    URL.revokeObjectURL(posterUrl.value)
+    posterUrl.value = ''
+  }
+  posterBlob.value = null
+}
+
+function roundRectPath(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2)
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.arcTo(x + width, y, x + width, y + height, r)
+  ctx.arcTo(x + width, y + height, x, y + height, r)
+  ctx.arcTo(x, y + height, x, y, r)
+  ctx.arcTo(x, y, x + width, y, r)
+  ctx.closePath()
+}
+
+function drawSpacedText(ctx, text, centerX, y, spacing) {
+  const chars = Array.from(text)
+  const widths = chars.map((char) => ctx.measureText(char).width)
+  const total = widths.reduce((sum, value) => sum + value, 0) + spacing * (chars.length - 1)
+  let cursor = centerX - total / 2
+  const align = ctx.textAlign
+  ctx.textAlign = 'left'
+  chars.forEach((char, index) => {
+    ctx.fillText(char, cursor, y)
+    cursor += widths[index] + spacing
+  })
+  ctx.textAlign = align
+}
+
+function fitFontSize(ctx, text, maxWidth, startSize, minSize, weight, family) {
+  let size = startSize
+  while (size > minSize) {
+    ctx.font = `${weight} ${size}px ${family}`
+    if (ctx.measureText(text).width <= maxWidth) break
+    size -= 3
+  }
+  return size
+}
+
+let kittyPosterImage = null
+function loadKittyPoster() {
+  if (kittyPosterImage) return Promise.resolve(kittyPosterImage)
+  return new Promise((resolve) => {
+    const image = new Image()
+    image.onload = () => {
+      kittyPosterImage = image
+      resolve(image)
+    }
+    image.onerror = () => resolve(null)
+    image.src = './kitty-line.svg'
+  })
+}
+
+const POSTER_THEMES = {
+  lilac: {
+    bg1: '#fdf8ff',
+    bg2: '#f2e1fb',
+    blobA: 'rgba(249, 213, 235, 0.8)',
+    blobB: 'rgba(224, 206, 250, 0.9)',
+    accentA: '#c493e0',
+    accentB: '#ed97bc'
+  },
+  sakura: {
+    bg1: '#fff9fb',
+    bg2: '#ffe4ee',
+    blobA: 'rgba(255, 208, 226, 0.85)',
+    blobB: 'rgba(255, 228, 208, 0.9)',
+    accentA: '#f0a2bf',
+    accentB: '#f6b78e'
+  },
+  cream: {
+    bg1: '#fffdf8',
+    bg2: '#f8e9d6',
+    blobA: 'rgba(255, 232, 198, 0.85)',
+    blobB: 'rgba(238, 219, 250, 0.85)',
+    accentA: '#e7b98a',
+    accentB: '#e8a7b7'
+  }
+}
+
+async function drawPoster(ctx, food) {
+  const width = 1080
+  const height = 1440
+  const palette = POSTER_THEMES[theme.value] || POSTER_THEMES.lilac
+  const family = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif'
+
+  const background = ctx.createLinearGradient(0, 0, width, height)
+  background.addColorStop(0, palette.bg1)
+  background.addColorStop(1, palette.bg2)
+  ctx.fillStyle = background
+  ctx.fillRect(0, 0, width, height)
+
+  const blobA = ctx.createRadialGradient(900, 120, 20, 900, 120, 520)
+  blobA.addColorStop(0, palette.blobA)
+  blobA.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = blobA
+  ctx.fillRect(0, 0, width, height)
+
+  const blobB = ctx.createRadialGradient(120, 1180, 20, 120, 1180, 560)
+  blobB.addColorStop(0, palette.blobB)
+  blobB.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = blobB
+  ctx.fillRect(0, 0, width, height)
+
+  const kitty = await loadKittyPoster()
+
+  ctx.save()
+  ctx.shadowColor = 'rgba(120, 76, 145, 0.16)'
+  ctx.shadowBlur = 60
+  ctx.shadowOffsetY = 26
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.86)'
+  roundRectPath(ctx, 72, 72, 936, 1296, 64)
+  ctx.fill()
+  ctx.restore()
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'
+  ctx.lineWidth = 3
+  roundRectPath(ctx, 76, 76, 928, 1288, 60)
+  ctx.stroke()
+
+  if (kitty) {
+    ctx.save()
+    ctx.globalAlpha = 0.14
+    ctx.drawImage(kitty, 748, 108, 198, 198)
+    ctx.restore()
+  }
+
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+
+  ctx.fillStyle = '#b083c4'
+  ctx.font = `700 30px ${family}`
+  drawSpacedText(ctx, 'SWEET CHOICE', width / 2, 196, 14)
+
+  const now = new Date()
+  const dateText = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`
+  ctx.fillStyle = '#c3a6cc'
+  ctx.font = `500 26px ${family}`
+  ctx.fillText(`${dateText} · ${timeSlot.value.label}`, width / 2, 246)
+
+  const pillWidth = 330
+  const pillHeight = 62
+  const pillX = (width - pillWidth) / 2
+  const pillY = 310
+  const pill = ctx.createLinearGradient(pillX, pillY, pillX + pillWidth, pillY + pillHeight)
+  pill.addColorStop(0, palette.accentA)
+  pill.addColorStop(1, palette.accentB)
+  ctx.save()
+  ctx.globalAlpha = 0.18
+  ctx.fillStyle = pill
+  roundRectPath(ctx, pillX, pillY, pillWidth, pillHeight, 31)
+  ctx.fill()
+  ctx.restore()
+  ctx.fillStyle = '#a05f8c'
+  ctx.font = `700 26px ${family}`
+  drawSpacedText(ctx, timeSlot.value.eyebrow.toUpperCase(), width / 2, pillY + pillHeight / 2 + 1, 5)
+
+  const ringY = 620
+  const ringR = 148
+  const ring = ctx.createRadialGradient(width / 2, ringY - 50, 20, width / 2, ringY, ringR)
+  ring.addColorStop(0, '#ffffff')
+  ring.addColorStop(0.62, '#fff8fc')
+  ring.addColorStop(1, '#f9eaf6')
+  ctx.save()
+  ctx.shadowColor = 'rgba(173, 107, 153, 0.22)'
+  ctx.shadowBlur = 40
+  ctx.shadowOffsetY = 16
+  ctx.fillStyle = ring
+  ctx.beginPath()
+  ctx.arc(width / 2, ringY, ringR, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+
+  ctx.strokeStyle = 'rgba(233, 183, 216, 0.7)'
+  ctx.lineWidth = 3
+  ctx.setLineDash([12, 14])
+  ctx.beginPath()
+  ctx.arc(width / 2, ringY, ringR + 24, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.setLineDash([])
+
+  ctx.font = `400 162px ${family}`
+  ctx.fillText(food.emoji || '🍽️', width / 2, ringY + 6)
+
+  const nameSize = fitFontSize(ctx, food.name, 760, 104, 60, 800, family)
+  ctx.fillStyle = '#4e3053'
+  ctx.font = `800 ${nameSize}px ${family}`
+  ctx.fillText(food.name, width / 2, 880)
+
+  ctx.fillStyle = '#a17fa8'
+  ctx.font = `500 32px ${family}`
+  ctx.fillText(resultHistoryNote.value.replace(' ♡', ''), width / 2, 962)
+
+  const promptLine = promptText.value.length > 20 ? promptText.value.slice(0, 20) + '…' : promptText.value
+  ctx.fillStyle = '#b193b9'
+  ctx.font = `400 26px ${family}`
+  ctx.fillText(promptLine, width / 2, 1026)
+
+  ctx.strokeStyle = 'rgba(166, 127, 186, 0.28)'
+  ctx.lineWidth = 2
+  ctx.setLineDash([10, 12])
+  ctx.beginPath()
+  ctx.moveTo(180, 1136)
+  ctx.lineTo(900, 1136)
+  ctx.stroke()
+  ctx.setLineDash([])
+
+  ctx.fillStyle = '#8f6f95'
+  ctx.font = `700 32px ${family}`
+  ctx.fillText('今天吃什么 · Sweet Choice', width / 2, 1206)
+
+  ctx.fillStyle = '#bda3c5'
+  ctx.font = `400 24px ${family}`
+  ctx.fillText('每天都要好好吃饭 ♡', width / 2, 1258)
+
+  const accent = ctx.createLinearGradient(0, 0, width, 0)
+  accent.addColorStop(0, palette.accentA)
+  accent.addColorStop(1, palette.accentB)
+  ctx.fillStyle = accent
+  roundRectPath(ctx, width / 2 - 90, 1300, 180, 8, 4)
+  ctx.fill()
+
+  ctx.font = `400 44px ${family}`
+  ctx.globalAlpha = 0.5
+  ctx.fillStyle = '#e6a5c2'
+  ctx.fillText('♥', 158, 1090)
+  ctx.fillStyle = '#c2a0dd'
+  ctx.font = `400 30px ${family}`
+  ctx.fillText('✦', 900, 1070)
+  ctx.fillText('✦', 176, 470)
+  ctx.globalAlpha = 1
+}
+
+let posterToken = 0
+
+async function buildPoster() {
+  const food = resultFood.value
+  if (!food) return
+  const token = ++posterToken
+  posterBlob.value = null
+  if (posterUrl.value) {
+    URL.revokeObjectURL(posterUrl.value)
+    posterUrl.value = ''
+  }
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1080
+    canvas.height = 1440
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('no canvas')
+    await drawPoster(ctx, food)
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+    if (!blob) throw new Error('empty poster')
+    if (token !== posterToken) return
+    posterBlob.value = blob
+    posterUrl.value = URL.createObjectURL(blob)
+  } catch (e) {
+    if (token !== posterToken) return
+    posterOpen.value = false
+    showToast('图片生成失败了，试试分享链接')
+  }
+}
+
+function downloadPoster() {
+  if (!posterUrl.value) return
+  const link = document.createElement('a')
+  link.href = posterUrl.value
+  link.download = `sweet-choice-${Date.now()}.png`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  showToast('图片已保存 ♡ 没看到的话试试长按图片')
+}
+
+function savePoster() {
+  downloadPoster()
+}
+
+async function sharePoster() {
+  const blob = posterBlob.value
+  const food = resultFood.value
+  if (!blob || !food) return
+  const fileName = `sweet-choice-${food.name}.png`
+  try {
+    const file = new File([blob], fileName, { type: 'image/png' })
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: '今天吃什么',
+        text: `今天吃「${food.name}」！转盘替我选的，不许反悔 ♡`
+      })
+      return
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return
+  }
+  downloadPoster()
 }
 
 /* ------------------------------------------------------------------ */
@@ -1587,7 +2129,7 @@ function focusPanel(name) {
 }
 
 function trapFocus(event) {
-  const panel = document.querySelector('.mask.show .sheet, .mask.show .result-sheet, .confirm-card')
+  const panel = document.querySelector('.mask.show .sheet, .mask.show .result-sheet, .poster-mask.show .poster-panel, .confirm-card')
   if (!panel) return
   const nodes = Array.from(panel.querySelectorAll(FOCUSABLE)).filter(
     (el) => el.offsetWidth > 0 || el.offsetHeight > 0
@@ -1616,12 +2158,27 @@ function anyOverlay() {
     promptOpen.value ||
     settingsOpen.value ||
     showResult.value ||
+    shareOpen.value ||
+    posterOpen.value ||
+    manualOpen.value ||
     Boolean(dialog.value)
   )
 }
 
 function onKeydown(event) {
   if (event.key === 'Escape') {
+    if (posterOpen.value) {
+      closePoster()
+      return
+    }
+    if (shareOpen.value) {
+      closeShare()
+      return
+    }
+    if (manualOpen.value) {
+      closeManualCopy()
+      return
+    }
     if (dialog.value) {
       closeDialog()
       return
@@ -1701,7 +2258,7 @@ watch(theme, (value) => {
   document.documentElement.dataset.theme = value
 })
 
-watch([editorOpen, showResult, promptOpen, settingsOpen, dialog], (values) => {
+watch([editorOpen, showResult, promptOpen, settingsOpen, shareOpen, posterOpen, manualOpen, dialog], (values) => {
   const locked = values.some(Boolean)
   if (typeof document === 'undefined') return
   document.documentElement.classList.toggle('overlay-open', locked)
@@ -1729,6 +2286,7 @@ onBeforeUnmount(() => {
   clearTimeout(toastTimer)
   clearTimeout(settleTimer)
   clearInterval(clockTimer)
+  if (posterUrl.value) URL.revokeObjectURL(posterUrl.value)
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('orientationchange', handleResize)
   window.removeEventListener('keydown', onKeydown)
@@ -3635,5 +4193,231 @@ onBeforeUnmount(() => {
   .hub.is-settled {
     animation: none !important;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* 分享方式与图片预览                                                  */
+/* ------------------------------------------------------------------ */
+.share-sheet {
+  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+}
+.share-options {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 18px;
+}
+.share-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 18px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(232, 216, 241, 0.9), 0 6px 14px rgba(146, 101, 168, 0.06);
+}
+.share-icon {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #f8ecfb, #fdeaf3);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+.share-icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.share-option-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.share-option-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #5e3c5d;
+}
+.share-option-hint {
+  font-size: 10.5px;
+  letter-spacing: 0.2px;
+  color: #b193b9;
+}
+.share-chev {
+  flex: none;
+  font-size: 17px;
+  line-height: 1;
+  color: #c3a6cc;
+}
+.share-cancel {
+  width: 100%;
+  height: 44px;
+  margin-top: 14px;
+  border-radius: 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #9a7ba2;
+  background: #f6edfa;
+}
+
+.poster-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(62, 40, 66, 0.42);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+  backdrop-filter: blur(10px) saturate(115%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.poster-mask.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.poster-panel {
+  width: min(92vw, 360px);
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-radius: 26px;
+  background: linear-gradient(180deg, #fffbfe 0%, #fbf1fa 100%);
+  box-shadow: 0 30px 70px rgba(70, 40, 80, 0.32);
+  transform: translateY(14px) scale(0.97);
+  transition: transform 0.34s cubic-bezier(0.16, 0.9, 0.22, 1);
+  scrollbar-width: none;
+}
+.poster-panel::-webkit-scrollbar {
+  width: 0;
+}
+.poster-mask.show .poster-panel {
+  transform: translateY(0) scale(1);
+}
+.poster-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 2px 10px;
+}
+.poster-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #7c5290;
+}
+.poster-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f7ecfa;
+  box-shadow: inset 0 0 0 1px rgba(232, 216, 241, 0.9);
+}
+.poster-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.poster-loading {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 11px;
+  color: #a183a9;
+}
+.poster-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(200, 160, 220, 0.35);
+  border-top-color: #c08fd8;
+  animation: posterSpin 0.8s linear infinite;
+}
+@keyframes posterSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.poster-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 12px;
+}
+.poster-actions .btn {
+  height: 44px;
+  border-radius: 14px;
+  font-size: 12.5px;
+  letter-spacing: 0.4px;
+}
+.poster-actions .btn[disabled] {
+  opacity: 0.45;
+}
+.poster-hint {
+  margin: 9px 0 0;
+  text-align: center;
+  font-size: 9.5px;
+  letter-spacing: 0.3px;
+  color: #b193b9;
+}
+.share-tip {
+  margin: 12px 2px 0;
+  text-align: center;
+  font-size: 9.5px;
+  line-height: 1.6;
+  letter-spacing: 0.3px;
+  color: #b193b9;
+}
+.copy-sheet {
+  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+}
+.copy-area {
+  width: 100%;
+  height: 92px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(224, 200, 235, 0.8);
+  background: #f8f0fb;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #5e3c5d;
+  outline: none;
+  resize: none;
+  word-break: break-all;
+}
+.share-option,
+.share-cancel {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.share-option:active,
+.share-cancel:active {
+  transform: scale(0.985);
+  opacity: 0.9;
 }
 </style>
