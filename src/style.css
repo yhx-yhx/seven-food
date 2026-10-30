@@ -1,0 +1,73 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: #f4ebf8;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  color: #573a58;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro SC', 'PingFang SC',
+    'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+  background:
+    radial-gradient(700px 500px at 15% 8%, #f3e8fc 0%, rgba(243, 232, 252, 0) 62%),
+    radial-gradient(700px 600px at 86% 35%, #fbeaf5 0%, rgba(251, 234, 245, 0) 64%),
+    linear-gradient(160deg, #f2e9f9 0%, #f9f0f9 45%, #f3ecf9 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:focus-visible {
+  outline: 2px solid rgba(178, 103, 145, 0.65);
+  outline-offset: 3px;
+}
+
+input {
+  font: inherit;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+html.overlay-open,
+body.overlay-open {
+  overflow: hidden;
+}
+
+::placeholder {
+  color: #b9a1c3;
+  opacity: 1;
+}
