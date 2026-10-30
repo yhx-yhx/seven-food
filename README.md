@@ -6,19 +6,25 @@
 
 一个纯 **Vue 3 + Vite** 的移动端美食转盘：浅紫 + 樱花粉的 Hello Kitty 风格，适合 iPhone / Android / H5。
 
-默认内置 10 道菜，点中间 Kitty 或「随机抽一个」即可从当前菜单里随机选出今晚吃什么；菜单可以完全自定义，并保存在浏览器本地。
+默认内置 11 道菜，点中间 Kitty 或「随机抽一个」即可从当前菜单里随机选出今晚吃什么；菜单可以完全自定义，并保存在浏览器本地。
 
 ![首页](docs/preview.png)
 
 ## 功能
 
-- **随机抽一个**：从当前 10 道默认菜（或自定义菜单）中随机选择 1 道，转盘旋转 5～6 圈后缓慢停在结果扇形。
+- **随机抽一个**：从当前菜单中随机选择 1 道，转盘旋转 5～6 圈后缓慢停在结果扇形。
+- **不会连着吃同一家**：记录最近吃过的菜，刚吃过的会自动降权；菜单格子上会给 24 小时内吃过的菜打勾。
+- **不想吃这个**：结果页可以「排除它再换一个」，本轮不再出现，抽到只剩两道时自动重置。
 - **旋转中的标签**：旋转时标签轻微模糊，增加神秘感；同时标签始终水平朝上，随扇形位置移动，不会跟着转盘倒转。
-- **今日提示**：顶部提示文字支持「随机一句」和「自定义」；随机模式每次打开、抽完一次或点「换一句」都会变化，自定义内容持久保存。
-- **结果卡片**：底部弹出完整菜名、Emoji、庆祝动效；可「再转一次」或「好，就它了」。
-- **自定义菜单**：默认 10 道菜、最多 12 道、最少 2 道；支持添加、删除、灵感推荐、恢复默认。
-- **本地保存**：菜单和今日提示自动写入 `localStorage`，刷新/下次打开仍然保留。
+- **今日提示**：顶部提示文字支持「随机一句」和「自定义」；随机模式会按早/午/下午茶/晚/夜宵切换文案池，每次抽完自动换一句。
+- **结果卡片**：底部弹出完整菜名、Emoji、庆祝动效；可「再转一次」「好，就它了」「分享给朋友」。
+- **自定义菜单**：默认 11 道菜、最多 12 道、最少 2 道；支持添加、改名换图标、删除可撤销、灵感推荐、恢复默认。
+- **主题与音效**：浅紫 / 樱粉 / 奶油三套主题；转盘音效可开关（默认关闭，WebAudio 合成，无音频文件）。
+- **菜单分享**：把菜单生成一条链接或 `SF1…` 短码，朋友打开即可一键导入，不需要后端。
+- **PWA**：可以「添加到主屏幕」，全屏运行，并缓存静态资源支持离线打开。
+- **本地保存**：菜单、提示、吃过记录、设置全部写入 `localStorage`，刷新/下次打开仍然保留。
 - **移动端体验**：自适应 320～480px、安全区适配、`100dvh` 回退、iOS 输入框 16px 防缩放、遮罩滚动锁定、轻震动反馈、减少动效偏好支持。
+- **键盘与无障碍**：真实 `<button>`、空格转动、Esc 关闭面板、面板内 Tab 焦点循环。
 - **原素材还原**：使用需求方提供的 Hello Kitty 线稿 SVG，改为浅紫 → 樱花粉渐变，保留原始造型。
 
 | 抽取结果 | 编辑菜单 |
@@ -34,6 +40,24 @@
 | 随机一句 | 自定义 |
 | --- | --- |
 | ![随机提示](docs/prompt.png) | ![自定义提示](docs/prompt-custom.png) |
+
+设置面板（主题 / 音效 / 菜单分享）：
+
+![设置](docs/settings.png)
+
+## 安装到主屏幕
+
+- **iPhone / iPad**：Safari 打开线上地址 → 分享 → 「添加到主屏幕」。
+- **Android**：Chrome 打开 → 菜单 → 「安装应用」或「添加到主屏幕」。
+- 安装后从主屏图标启动即可全屏显示，断网时也能打开已缓存的页面。
+- PWA 需要 HTTPS，GitHub Pages 默认满足；本地预览请用 `npm run preview`（`localhost` 视为安全上下文）。
+
+## 菜单分享码
+
+- 设置 → 菜单分享 →「复制分享链接」，得到形如 `https://…/#m=SF1xxxx` 的链接。
+- 也可以只发 `SF1…` 短码，对方在「导入菜单」里粘贴即可。
+- 短码是 `JSON → UTF-8 → base64url`，完全在本地编码/解码，不上传任何数据。
+- 打开带 `#m=` 的链接会弹出「朋友分享了一份菜单」，确认后替换当前菜单。
 
 ## 运行
 
@@ -81,6 +105,11 @@ npm run preview
 ```text
 .
 ├─ docs/                     # 设计预览图
+├─ public/
+│  ├─ manifest.webmanifest    # PWA 清单
+│  ├─ sw.js                   # 离线缓存
+│  ├─ icon.svg
+│  └─ icon-*.png              # 主屏图标
 ├─ src/
 │  ├─ assets/
 │  │  ├─ hello-kitty-line.svg  # 用户提供的原始线稿素材
@@ -88,9 +117,11 @@ npm run preview
 │  ├─ components/
 │  │  ├─ HelloKitty.vue        # 内联 SVG 组件（着色用渐变）
 │  │  └─ BowMark.vue           # 蝴蝶结组件
+│  ├─ lib/
+│  │  └─ share-code.js         # 菜单分享码编解码
 │  ├─ App.vue                  # 页面与全部交互逻辑
 │  ├─ main.js
-│  └─ style.css                # 全局重置、按钮、安全区
+│  └─ style.css                # 全局重置、按钮、安全区、主题底色
 ├─ index.html
 ├─ package.json
 ├─ vite.config.js
@@ -116,27 +147,40 @@ const DEFAULT_FOODS = [
 
 ### 今日提示文案
 
-- 随机文案池：`src/App.vue` 顶部 `PROMPT_POOL`
+- 通用文案池：`src/App.vue` 顶部 `PROMPT_POOL`
+- 分时段文案池：`SLOT_PROMPTS`（早/午/下午茶/晚/夜宵），与通用池合并后随机
+- 时段划分与顶部「XX 宜 …」文案：`SLOTS`
 - 自定义/随机模式与当前文案会写入 `localStorage`
 - 存储 key：`sevenfood.prompt.v1`
 - 页面顶部的提示文字本身可点击，或点右侧小铅笔进入设置
 
 ### 修改主题色
 
-- 转盘扇形颜色：`src/App.vue` 中的 `PALETTE`
-- 页面渐变/卡片颜色：`src/App.vue` 中 `.page`、`.wheel-shell`、`.hub` 等样式
+- 三套主题定义在 `src/App.vue` 顶部的 `THEMES`（`palette` 控制扇形颜色）
+- 主题的 CSS 变量在 `.page` / `.page[data-theme='sakura']` / `.page[data-theme='cream']`：
+  - `--grad-btn`：主按钮渐变
+  - `--pin-1/2/3`：爱心指针渐变
+  - `--rim`：转盘外圈
+  - `--hub-grad`：中心圆盘
+  - `--page-bg`：页面背景
+- 页面外圈底色：`src/style.css` 里的 `html[data-theme='…'] body`
 - Hello Kitty 线条渐变：`src/components/HelloKitty.vue` 里的 `linearGradient`
 - 蝴蝶结颜色：`src/components/BowMark.vue`
 
 ### 随机与存储
 
-- 随机使用 `crypto.getRandomValues`（不可用时回退 `Math.random`），并避免连续两次抽到同一道菜。
-- 菜单存储 key：`sevenfood.menu.v1`
-- 提示存储 key：`sevenfood.prompt.v1`
+- 随机使用 `crypto.getRandomValues`（不可用时回退 `Math.random`）。
+- 抽取权重：今天吃过 ×0.1、昨天 ×0.35、3 天内 ×0.6、7 天内 ×0.85；上一轮抽中的再 ×0.15。
+- 存储 key：
+  - `sevenfood.menu.v1`：菜单
+  - `sevenfood.prompt.v1`：今日提示
+  - `sevenfood.history.v1`：最近吃过（保留 60 条）
+  - `sevenfood.settings.v1`：主题与音效
 - 清空存储：
   ```js
-  localStorage.removeItem('sevenfood.menu.v1')
-  localStorage.removeItem('sevenfood.prompt.v1')
+  Object.keys(localStorage)
+    .filter((key) => key.startsWith('sevenfood.'))
+    .forEach((key) => localStorage.removeItem(key))
   ```
 
 ## 打包成 App（可选）

@@ -1,5 +1,5 @@
 <template>
-  <div class="page">
+  <div class="page" :data-theme="theme">
     <div class="grain"></div>
 
     <!-- 背景里的 Hello Kitty 水印 -->
@@ -19,26 +19,38 @@
             <h1 class="title">今天吃什么</h1>
           </div>
         </div>
-        <div class="icon-btn" role="button" tabindex="0" aria-label="编辑菜单" @click="openEditor" @keydown.enter="openEditor">
-          <svg class="icon-edit" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path
-              d="M4.9 19.1l1.1-4.1L16.7 4.3a2.35 2.35 0 0 1 3.3 3.3L9.3 18.3 4.9 19.1z"
-              stroke="#8A6296"
-              stroke-width="1.6"
-              stroke-linejoin="round"
-            />
-            <path d="M15 6.2l3.1 3.1" stroke="#8A6296" stroke-width="1.6" stroke-linecap="round" />
-            <path d="M4.9 19.1l1.1-4.1 3 3-4.1 1.1z" fill="#EB9AB9" />
-          </svg>
+        <div class="topbar-actions">
+          <button type="button" class="icon-btn" aria-label="设置" @click="openSettings">
+            <svg class="icon-gear" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" stroke="#8A6296" stroke-width="1.5" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+                stroke="#8A6296"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button type="button" class="icon-btn" aria-label="编辑菜单" @click="openEditor">
+            <svg class="icon-edit" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path
+                d="M4.9 19.1l1.1-4.1L16.7 4.3a2.35 2.35 0 0 1 3.3 3.3L9.3 18.3 4.9 19.1z"
+                stroke="#8A6296"
+                stroke-width="1.6"
+                stroke-linejoin="round"
+              />
+              <path d="M15 6.2l3.1 3.1" stroke="#8A6296" stroke-width="1.6" stroke-linecap="round" />
+              <path d="M4.9 19.1l1.1-4.1 3 3-4.1 1.1z" fill="#EB9AB9" />
+            </svg>
+          </button>
         </div>
       </div>
-      <div
+      <button
+        type="button"
         class="lede-row"
-        role="button"
-        tabindex="0"
         aria-label="编辑今日提示"
         @click="openPromptEditor"
-        @keydown.enter="openPromptEditor"
       >
         <Transition name="prompt-fade" mode="out-in">
           <span :key="promptText" class="lede-text">{{ promptText }} <span class="lede-heart">♡</span></span>
@@ -50,15 +62,15 @@
             <path d="M5 19l1-4 3 3-4 1z" fill="#EB9AB9" />
           </svg>
         </span>
-      </div>
+      </button>
 
       <!-- 转盘 -->
       <div class="wheel-section">
         <div class="meta-pill">
           <span class="spark">✦</span>
-          <span>今日宜</span>
+          <span>{{ timeSlot.label }}宜</span>
           <div class="sep"></div>
-          <span class="pill-strong">大吃一顿</span>
+          <span class="pill-strong">{{ timeSlot.mood }}</span>
         </div>
 
         <div
@@ -91,12 +103,18 @@
               :style="{ left: pearl.x + '%', top: pearl.y + '%' }"
             ></div>
 
-            <div class="hub" role="button" tabindex="0" aria-label="转动转盘，随机选一个" @click="spin" @keydown.enter="spin">
+            <button
+              type="button"
+              class="hub"
+              :class="{ 'is-settled': settled }"
+              aria-label="转动转盘，随机选一个"
+              @click="spin"
+            >
               <div class="hub-inner">
                 <div class="kitty-wrap" aria-hidden="true"><HelloKitty /></div>
                 <span class="go">转一转</span>
               </div>
-            </div>
+            </button>
           </div>
 
           <div class="pointer" aria-hidden="true">
@@ -108,9 +126,9 @@
             >
               <defs>
                 <linearGradient id="heartPinGradient" x1="8" y1="6" x2="56" y2="54" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#E8B4F2" />
-                  <stop offset="0.55" stop-color="#EDA5D4" />
-                  <stop offset="1" stop-color="#F08DB8" />
+                  <stop stop-color="var(--pin-1, #E8B4F2)" />
+                  <stop offset="0.55" stop-color="var(--pin-2, #EDA5D4)" />
+                  <stop offset="1" stop-color="var(--pin-3, #F08DB8)" />
                 </linearGradient>
               </defs>
               <path
@@ -132,12 +150,18 @@
           </div>
         </div>
 
-        <div class="spin-link" role="button" tabindex="0" aria-label="随机抽一个" @click="spin" @keydown.enter="spin">
+        <button type="button" class="spin-link" aria-label="随机抽一个" @click="spin">
           <span class="spin-spark">✦</span>
           <span class="spin-text">随机抽一个</span>
           <div class="spin-dot"></div>
-          <span class="spin-count">{{ foods.length }} 选 1</span>
-        </div>
+          <span class="spin-count">{{ poolCount }} 选 1</span>
+        </button>
+        <button
+          v-if="excludedCount"
+          type="button"
+          class="exclude-reset"
+          @click="clearExcluded"
+        >已排除 {{ excludedCount }} 道 · 恢复全部</button>
       </div>
 
       <!-- 今晚菜单 -->
@@ -148,16 +172,25 @@
             <span>今天的菜单</span>
             <span class="menu-count">{{ foods.length }} 道</span>
           </div>
-          <div class="menu-edit" role="button" tabindex="0" @click="openEditor" @keydown.enter="openEditor">
+          <button type="button" class="menu-edit" @click="openEditor">
             <span>调整菜单</span>
             <span class="chev">›</span>
-          </div>
+          </button>
         </div>
         <div class="menu-grid">
-          <div v-for="item in foods" :key="'menu-' + item.id" class="menu-item">
+          <div
+            v-for="item in foods"
+            :key="'menu-' + item.id"
+            class="menu-item"
+            :class="{ eaten: eatenNames.has(item.name) }"
+          >
             <span class="menu-emoji">{{ item.emoji }}</span>
             <span class="menu-name">{{ item.short || item.name }}</span>
           </div>
+        </div>
+        <div v-if="recentHistoryText" class="menu-history">
+          <span class="menu-history-label">最近吃过</span>
+          <span class="menu-history-text">{{ recentHistoryText }}</span>
         </div>
       </div>
 
@@ -173,17 +206,17 @@
       :class="{ show: editorOpen }"
       @click="closeEditor"
     >
-      <div class="sheet editor-sheet" role="dialog" aria-modal="true" aria-label="编辑菜单" @click.stop>
+      <div class="sheet editor-sheet" data-panel="editor" tabindex="-1" role="dialog" aria-modal="true" aria-label="编辑菜单" @click.stop>
         <div class="grabber"></div>
         <div class="sheet-head">
           <div class="sheet-titles">
             <span class="sheet-eyebrow">My Menu</span>
             <span class="sheet-title">我的菜单</span>
-            <span class="sheet-sub">留住喜欢的味道，最多 12 道</span>
+            <span class="sheet-sub">点菜名可以改名换图标，最多 12 道</span>
           </div>
           <div class="sheet-head-actions">
-            <span class="reset-link" role="button" tabindex="0" @click="requestReset" @keydown.enter="requestReset">恢复推荐</span>
-            <div class="sheet-close" role="button" tabindex="0" aria-label="关闭" @click="closeEditor" @keydown.enter="closeEditor">✕</div>
+            <button type="button" class="reset-link" @click="requestReset">恢复推荐</button>
+            <button type="button" class="sheet-close" aria-label="关闭" @click="closeEditor">✕</button>
           </div>
         </div>
 
@@ -219,12 +252,52 @@
           class="food-list"
           :style="{ height: listHeight + 'px' }"
         >
-          <div v-for="(item, index) in foods" :key="'row-' + item.id" class="food-row">
-            <div class="food-avatar"><span>{{ item.emoji }}</span></div>
-            <span class="food-name">{{ item.name }}</span>
-            <span class="food-num">{{ (index + 1 < 10 ? '0' : '') + (index + 1) }}</span>
-            <div class="remove" role="button" tabindex="0" :aria-label="'删除 ' + item.name" @click.stop="removeFood(item.id)" @keydown.enter.stop="removeFood(item.id)">−</div>
-          </div>
+          <template v-for="(item, index) in foods" :key="'row-' + item.id">
+            <div class="food-row" :class="{ editing: editingId === item.id }">
+              <template v-if="editingId === item.id">
+                <div class="edit-main">
+                  <input
+                    v-model="editName"
+                    class="edit-input"
+                    :maxlength="10"
+                    enterkeyhint="done"
+                    autocomplete="off"
+                    aria-label="修改菜名"
+                    @keydown.enter="saveEdit"
+                  />
+                  <button type="button" class="edit-ok" @click="saveEdit">保存</button>
+                  <button type="button" class="edit-cancel" @click="cancelEdit">取消</button>
+                </div>
+              </template>
+              <template v-else>
+                <button
+                  type="button"
+                  class="food-avatar"
+                  :aria-label="'修改 ' + item.name"
+                  @click="startEdit(item)"
+                >{{ item.emoji }}</button>
+                <button type="button" class="food-name" @click="startEdit(item)">{{ item.name }}</button>
+                <span class="food-num">{{ (index + 1 < 10 ? '0' : '') + (index + 1) }}</span>
+                <button
+                  type="button"
+                  class="remove"
+                  :aria-label="'删除 ' + item.name"
+                  @click.stop="removeFood(item.id)"
+                >−</button>
+              </template>
+            </div>
+            <div v-if="editingId === item.id" class="emoji-strip">
+              <button
+                v-for="emoji in EDIT_EMOJIS"
+                :key="'emoji-' + emoji"
+                type="button"
+                class="emoji-chip"
+                :class="{ active: editEmoji === emoji }"
+                :aria-label="'使用 ' + emoji"
+                @click="editEmoji = emoji"
+              >{{ emoji }}</button>
+            </div>
+          </template>
         </div>
 
         <div v-if="presetSuggestions.length" class="presets">
@@ -232,18 +305,16 @@
             <span>灵感补给</span>
           </div>
           <div class="preset-wrap">
-            <div
+            <button
               v-for="preset in presetSuggestions"
               :key="'preset-' + preset.name"
+              type="button"
               class="preset"
-              role="button"
-              tabindex="0"
               @click="addPreset(preset)"
-              @keydown.enter="addPreset(preset)"
             >
               <span>{{ preset.emoji }} {{ preset.name }}</span>
               <span class="preset-plus">+</span>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -251,7 +322,7 @@
           <div class="foot-left">
             <span class="count">已收录 <span class="count-strong">{{ foods.length }}</span> / 12</span>
           </div>
-          <div class="done-btn" role="button" tabindex="0" @click="closeEditor" @keydown.enter="closeEditor">完成</div>
+          <button type="button" class="done-btn" @click="closeEditor">完成</button>
         </div>
       </div>
     </div>
@@ -262,7 +333,7 @@
       :class="{ show: promptOpen }"
       @click="closePrompt"
     >
-      <div class="sheet prompt-sheet" :style="{ bottom: promptKeyboardOffset + 'px' }" role="dialog" aria-modal="true" aria-label="编辑今日提示" @click.stop>
+      <div class="sheet prompt-sheet" data-panel="prompt" tabindex="-1" :style="{ bottom: promptKeyboardOffset + 'px' }" role="dialog" aria-modal="true" aria-label="编辑今日提示" @click.stop>
         <div class="grabber"></div>
         <div class="sheet-head">
           <div class="sheet-titles">
@@ -270,7 +341,7 @@
             <span class="sheet-title">今日提示</span>
             <span class="sheet-sub">写一句今天想看到的文字</span>
           </div>
-          <div class="sheet-close" role="button" tabindex="0" aria-label="关闭" @click="closePrompt" @keydown.enter="closePrompt">✕</div>
+          <button type="button" class="sheet-close" aria-label="关闭" @click="closePrompt">✕</button>
         </div>
 
         <div class="prompt-preview">
@@ -324,28 +395,120 @@
       </div>
     </div>
 
+    <!-- 设置 -->
+    <div class="mask" :class="{ show: settingsOpen }" @click="closeSettings">
+      <div class="sheet settings-sheet" data-panel="settings" tabindex="-1" role="dialog" aria-modal="true" aria-label="设置" @click.stop>
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <div class="sheet-titles">
+            <span class="sheet-eyebrow">Settings</span>
+            <span class="sheet-title">小设置</span>
+            <span class="sheet-sub">让转盘更像你的</span>
+          </div>
+          <button type="button" class="sheet-close" aria-label="关闭" @click="closeSettings">✕</button>
+        </div>
+
+        <div class="setting-block">
+          <div class="setting-label">主题色</div>
+          <div class="theme-row">
+            <button
+              v-for="item in THEMES"
+              :key="item.id"
+              type="button"
+              class="theme-chip"
+              :class="{ active: theme === item.id }"
+              @click="setTheme(item.id)"
+            >
+              <span class="theme-dot" :style="{ background: item.dot }"></span>
+              <span>{{ item.name }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-text">
+            <span class="setting-label">转盘音效</span>
+            <span class="setting-hint">转动时的嗒嗒声和停下的一声叮</span>
+          </div>
+          <button
+            type="button"
+            class="switch"
+            :class="{ on: soundEnabled }"
+            role="switch"
+            :aria-checked="soundEnabled ? 'true' : 'false'"
+            aria-label="转盘音效"
+            @click="toggleSound"
+          >
+            <span class="knob"></span>
+          </button>
+        </div>
+
+        <div class="setting-block">
+          <div class="setting-label">菜单分享</div>
+          <p class="setting-hint">把菜单变成一条链接或短码，朋友打开就能一键导入。</p>
+          <div class="share-row">
+            <button type="button" class="mini-btn" @click="copyShareLink">复制分享链接</button>
+            <button type="button" class="mini-btn ghost" @click="openImport">导入菜单</button>
+          </div>
+          <div v-if="shareCode" class="code-box">
+            <input
+              class="code-input"
+              :value="shareCode"
+              readonly
+              aria-label="菜单分享码"
+              @focus="$event.target.select()"
+            />
+            <button type="button" class="mini-btn tiny" @click="copyShareCode">复制</button>
+          </div>
+          <div v-if="importOpen" class="import-box">
+            <textarea
+              v-model="importText"
+              class="import-input"
+              rows="2"
+              placeholder="粘贴分享码或链接"
+              aria-label="粘贴分享码"
+            ></textarea>
+            <div class="import-actions">
+              <button type="button" class="mini-btn ghost" @click="importOpen = false">取消</button>
+              <button type="button" class="mini-btn" @click="submitImport">导入</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-foot">
+          <span class="count">设置会自动保存在本机</span>
+          <button type="button" class="done-btn" @click="closeSettings">完成</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 抽取结果 -->
     <div
       class="mask result-mask"
       :class="{ show: showResult }"
       @click="dismissResult"
     >
-      <div class="result-sheet" role="dialog" aria-modal="true" aria-label="抽取结果" @click.stop>
+      <div class="result-sheet" data-panel="result" tabindex="-1" role="dialog" aria-modal="true" aria-label="抽取结果" @click.stop>
         <div class="result-kitty" aria-hidden="true"><HelloKitty /></div>
         <div class="grabber"></div>
         <div class="result-top">
           <span class="spark">✦</span>
-          <span class="result-eyebrow">Tonight's Pick</span>
+          <span class="result-eyebrow">{{ timeSlot.eyebrow }}</span>
           <span class="spark">✦</span>
         </div>
         <div class="result-ring">
           <span class="result-emoji">{{ resultFood ? resultFood.emoji : '🍽️' }}</span>
         </div>
         <span class="result-name" :class="{ long: resultName.length > 6 }">{{ resultName }}</span>
-        <span class="result-line">命中注定的一餐，不许反悔 ♡</span>
+        <span class="result-line">{{ resultHistoryNote }}</span>
         <div class="result-actions">
-          <div class="btn ghost" role="button" tabindex="0" @click="spinAgain" @keydown.enter="spinAgain">再转一次</div>
-          <div class="btn solid" role="button" tabindex="0" @click="acceptResult" @keydown.enter="acceptResult">好，就它了</div>
+          <button type="button" class="btn ghost" @click="spinAgain">再转一次</button>
+          <button type="button" class="btn solid" @click="acceptResult">好，就它了</button>
+        </div>
+        <div class="result-links">
+          <button type="button" class="result-link" @click="rejectResult">不想吃这个 · 换一个 ↺</button>
+          <span class="result-link-dot"></span>
+          <button type="button" class="result-link" @click="shareResult">分享给朋友 ♡</button>
         </div>
         <span class="confetti c1">♥</span>
         <span class="confetti c2">✦</span>
@@ -353,21 +516,24 @@
         <span class="confetti c4">✦</span>
       </div>
     </div>
-    <!-- 恢复推荐确认 -->
-    <div v-if="confirmOpen" class="confirm-mask" role="dialog" aria-modal="true" aria-labelledby="confirm-title" @click.self="cancelReset">
-      <div class="confirm-card">
-        <div class="confirm-icon">✦</div>
-        <div id="confirm-title" class="confirm-title">恢复推荐菜单？</div>
-        <div class="confirm-desc">当前菜单会被替换为十道推荐菜，<br />已添加的内容不会保留。</div>
+    <!-- 通用确认框 -->
+    <div v-if="dialog" class="confirm-mask" role="dialog" aria-modal="true" aria-labelledby="confirm-title" @click.self="closeDialog">
+      <div class="confirm-card" data-panel="confirm" tabindex="-1">
+        <div class="confirm-icon">{{ dialog.icon || '✦' }}</div>
+        <div id="confirm-title" class="confirm-title">{{ dialog.title }}</div>
+        <div class="confirm-desc">{{ dialog.desc }}</div>
         <div class="confirm-actions">
-          <button type="button" class="btn ghost" @click="cancelReset">再想想</button>
-          <button type="button" class="btn solid" @click="doReset">恢复推荐</button>
+          <button type="button" class="btn ghost" @click="closeDialog">{{ dialog.cancelText || '再想想' }}</button>
+          <button type="button" class="btn solid" @click="confirmDialog">{{ dialog.confirmText || '确定' }}</button>
         </div>
       </div>
     </div>
 
     <Transition name="toast">
-      <div v-if="toastVisible" class="toast" role="status" aria-live="polite">{{ toastText }}</div>
+      <div v-if="toastVisible" class="toast" :class="{ 'has-action': toastAction }" role="status" aria-live="polite">
+        <span class="toast-text">{{ toastText }}</span>
+        <button v-if="toastAction" type="button" class="toast-action" @click="runToastAction">{{ toastAction.label }}</button>
+      </div>
     </Transition>
 
   </div></template>
@@ -376,25 +542,54 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import HelloKitty from './components/HelloKitty.vue'
 import BowMark from './components/BowMark.vue'
+import { buildShareLink, decodeMenu, encodeMenu } from './lib/share-code'
 
 /* ------------------------------------------------------------------ */
 /* 配置                                                               */
 /* ------------------------------------------------------------------ */
 const STORAGE_KEY = 'sevenfood.menu.v1'
+const HISTORY_KEY = 'sevenfood.history.v1'
+const SETTINGS_KEY = 'sevenfood.settings.v1'
 const MAX_FOODS = 12
 const MIN_FOODS = 2
 const WHEEL_MAX = 330
 const SPIN_MS = 4600
+const DAY_MS = 86400000
 
-const PALETTE = [
-  '#EEDFFA',
-  '#FADDEB',
-  '#F6E6F6',
-  '#E5E1FC',
-  '#FBE1F3',
-  '#EDE5FB',
-  '#F7DFF0',
-  '#E4E3FC'
+/* 三套主题：转盘扇形、按钮渐变、指针爱心、页面背景 */
+const THEMES = [
+  {
+    id: 'lilac',
+    name: '浅紫',
+    dot: 'linear-gradient(135deg, #d9bcf0, #f7cfe2)',
+    palette: ['#EEDFFA', '#FADDEB', '#F6E6F6', '#E5E1FC', '#FBE1F3', '#EDE5FB', '#F7DFF0', '#E4E3FC']
+  },
+  {
+    id: 'sakura',
+    name: '樱粉',
+    dot: 'linear-gradient(135deg, #f9b8cd, #ffd9c8)',
+    palette: ['#FDE0EA', '#FCE7D9', '#FBD6E4', '#FDEAF0', '#F9D9C8', '#FCE3EC', '#FBEEDF', '#FAD2DF']
+  },
+  {
+    id: 'cream',
+    name: '奶油',
+    dot: 'linear-gradient(135deg, #f2d3a8, #e8c6ee)',
+    palette: ['#FBF0DC', '#F6E3C8', '#F7EBD9', '#F3E2CF', '#FAEEDC', '#F0E4F2', '#F8E9D3', '#F4E7D8']
+  }
+]
+
+/* 时段：影响顶部文案、提示语池和结果页标题 */
+const SLOTS = [
+  { id: 'morning', from: 5, to: 10, label: '早餐', mood: '元气开场', eyebrow: 'Morning Pick' },
+  { id: 'noon', from: 10, to: 15, label: '午餐', mood: '大吃一顿', eyebrow: 'Lunch Pick' },
+  { id: 'tea', from: 15, to: 17, label: '下午茶', mood: '甜一点', eyebrow: 'Tea Time Pick' },
+  { id: 'dinner', from: 17, to: 21, label: '晚餐', mood: '好好吃饭', eyebrow: 'Dinner Pick' },
+  { id: 'night', from: 21, to: 5, label: '夜宵', mood: '罪恶一下', eyebrow: 'Late Night Pick' }
+]
+
+const EDIT_EMOJIS = [
+  '🍜', '🍚', '🍗', '🍖', '🌶️', '🍲', '🍕', '🍣',
+  '🍢', '🥟', '🧋', '🍰', '🥗', '🍔', '🥩', '🍦'
 ]
 
 /* 十道默认菜：short 用于转盘，name 用于结果与菜单 */
@@ -437,6 +632,15 @@ const PROMPT_POOL = [
   '慢慢来，先从一顿喜欢的饭开始',
   '把胃交给好运气，把快乐留给自己'
 ]
+
+/* 按时段补充的提示语 */
+const SLOT_PROMPTS = {
+  morning: ['早安，先用一顿好的把自己叫醒', '早餐吃好，今天就不算太糟', '早上的一点甜，能撑到中午'],
+  noon: ['中午了，别让选择困难耽误干饭', '午饭是一天里最正当的放纵', '先吃饱，再想下午的事'],
+  tea: ['下午三点，需要一点甜续命', '来点小食，给今天加个逗号', '这个点吃东西，不算过分吧'],
+  dinner: ['忙了一天，晚饭值得认真一点', '晚饭吃什么，是今天最后一个难题', '天黑之前，先把自己喂饱'],
+  night: ['这么晚了，就别为难自己了', '夜宵是给熬夜的人的奖励', '吃点热的，然后好好睡觉']
+}
 
 const EMOJI_MAP = [
   [/土豆粉|拌粉|米粉|米线|饸饹|粉/, '🍜'],
@@ -521,12 +725,26 @@ function loadFoods() {
   return cloneDefaults()
 }
 
+function slotForHour(hour) {
+  return (
+    SLOTS.find((slot) =>
+      slot.from < slot.to ? hour >= slot.from && hour < slot.to : hour >= slot.from || hour < slot.to
+    ) || SLOTS[1]
+  )
+}
+
+function promptPool(hour) {
+  const h = typeof hour === 'number' ? hour : new Date().getHours()
+  return (SLOT_PROMPTS[slotForHour(h).id] || []).concat(PROMPT_POOL)
+}
+
 function pickPrompt(exclude) {
-  if (!PROMPT_POOL.length) return ''
-  let next = PROMPT_POOL[randomInt(PROMPT_POOL.length)]
+  const pool = promptPool()
+  if (!pool.length) return ''
+  let next = pool[randomInt(pool.length)]
   let guard = 0
   while (next === exclude && guard < 8) {
-    next = PROMPT_POOL[randomInt(PROMPT_POOL.length)]
+    next = pool[randomInt(pool.length)]
     guard += 1
   }
   return next
@@ -545,6 +763,39 @@ function loadPrompt() {
     /* 读取失败时使用随机提示 */
   }
   return { mode: 'random', text: pickPrompt() }
+}
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    if (raw) {
+      const saved = JSON.parse(raw)
+      if (Array.isArray(saved)) {
+        return saved
+          .filter((item) => item && typeof item.name === 'string' && Number.isFinite(item.ts))
+          .slice(0, 60)
+      }
+    }
+  } catch (e) {
+    /* 读取失败时按没有记录处理 */
+  }
+  return []
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY)
+    if (raw) {
+      const data = JSON.parse(raw)
+      return {
+        theme: THEMES.some((item) => item.id === data.theme) ? data.theme : 'lilac',
+        sound: data.sound === true
+      }
+    }
+  } catch (e) {
+    /* 读取失败时用默认设置 */
+  }
+  return { theme: 'lilac', sound: false }
 }
 
 function vibrate(ms = 8) {
@@ -580,32 +831,59 @@ function getWindowSize() {
 /* ------------------------------------------------------------------ */
 const initialSize = getWindowSize()
 const initialPrompt = loadPrompt()
+const initialSettings = loadSettings()
+const initialHistory = loadHistory()
 const windowWidth = ref(initialSize.width || 375)
 const windowHeight = ref(initialSize.height || 812)
 const foods = ref(loadFoods())
+const history = ref(initialHistory)
 const draft = ref('')
 const editorOpen = ref(false)
+const settingsOpen = ref(false)
 const showResult = ref(false)
-const confirmOpen = ref(false)
 const promptOpen = ref(false)
 const spinning = ref(false)
+const settled = ref(false)
 const rotation = ref(0)
 const noAnim = ref(false)
 const pickedIndex = ref(-1)
 const resultFood = ref(null)
+const resultDaysAgo = ref(Infinity)
 const toastVisible = ref(false)
 const toastText = ref('')
+const toastAction = ref(null)
 const promptMode = ref(initialPrompt.mode)
 const promptText = ref(initialPrompt.text)
 const promptDraftMode = ref(initialPrompt.mode)
 const promptDraft = ref(initialPrompt.text)
 const promptKeyboardOffset = ref(0)
+const theme = ref(initialSettings.theme)
+const soundEnabled = ref(initialSettings.sound)
+const excluded = ref([])
+const lastPickedId = ref('')
+const editingId = ref(null)
+const editName = ref('')
+const editEmoji = ref('')
+const dialog = ref(null)
+const shareCode = ref('')
+const importOpen = ref(false)
+const importText = ref('')
+const nowHour = ref(new Date().getHours())
 
 let spinTimer = null
 let applyTimer = null
 let resetTimer = null
 let againTimer = null
 let toastTimer = null
+let settleTimer = null
+let clockTimer = null
+
+const timeSlot = computed(() => slotForHour(nowHour.value))
+
+const palette = computed(() => {
+  const found = THEMES.find((item) => item.id === theme.value)
+  return (found || THEMES[0]).palette
+})
 
 const wheelSize = computed(() => {
   return Math.max(250, Math.min(Math.round(windowWidth.value * 0.86), WHEEL_MAX))
@@ -628,15 +906,56 @@ const presetSuggestions = computed(() => {
   return PRESETS.filter((item) => !names.has(item.name)).slice(0, 6)
 })
 
+/* 被「不想吃这个」排除的数量，以及本轮还剩多少可选 */
+const excludedCount = computed(() => {
+  const ids = new Set(foods.value.map((item) => item.id))
+  return excluded.value.filter((id) => ids.has(id)).length
+})
+
+const poolCount = computed(() => Math.max(foods.value.length - excludedCount.value, MIN_FOODS))
+
+/* 24 小时内吃过的菜，在菜单格子上打个勾 */
+const eatenNames = computed(() => {
+  const set = new Set()
+  const now = Date.now()
+  history.value.forEach((item) => {
+    if (now - item.ts < DAY_MS) set.add(item.name)
+  })
+  return set
+})
+
+const recentHistoryText = computed(() => {
+  const seen = new Set()
+  const parts = []
+  for (const item of history.value) {
+    if (seen.has(item.name)) continue
+    seen.add(item.name)
+    const days = Math.floor((Date.now() - item.ts) / DAY_MS)
+    parts.push(days <= 0 ? item.name : `${item.name} ${days} 天前`)
+    if (parts.length >= 2) break
+  }
+  return parts.join(' · ')
+})
+
+const resultHistoryNote = computed(() => {
+  if (!resultFood.value) return '命中注定的一餐，不许反悔 ♡'
+  const days = resultDaysAgo.value
+  if (days === 0) return '今天已经吃过一次啦，还吃吗 ♡'
+  if (days === 1) return '昨天刚吃过，看来是真爱 ♡'
+  if (days > 1 && days <= 7) return `${days} 天前吃过，看来是真爱 ♡`
+  return '命中注定的一餐，不许反悔 ♡'
+})
+
 const plateBackground = computed(() => {
   const count = foods.value.length || 1
   const step = 360 / count
   const stops = []
+  const colors = palette.value
   foods.value.forEach((item, index) => {
     const start = Number((index * step).toFixed(3))
     const end = Number(((index + 1) * step).toFixed(3))
     const edge = Number((end - 0.85).toFixed(3))
-    stops.push(`${PALETTE[index % PALETTE.length]} ${start}deg ${edge}deg`)
+    stops.push(`${colors[index % colors.length]} ${start}deg ${edge}deg`)
     stops.push(`rgba(255,255,255,.92) ${edge}deg ${end}deg`)
   })
   return `conic-gradient(from 0deg, ${stops.join(', ')})`
@@ -671,13 +990,26 @@ const pearls = Array.from({ length: 22 }, (_, index) => {
 /* ------------------------------------------------------------------ */
 /* 交互                                                               */
 /* ------------------------------------------------------------------ */
-function showToast(message) {
+function showToast(message, action, duration) {
   toastText.value = message
+  toastAction.value = action || null
   toastVisible.value = true
   clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => {
-    toastVisible.value = false
-  }, 1800)
+  toastTimer = setTimeout(
+    () => {
+      toastVisible.value = false
+      toastAction.value = null
+    },
+    duration || (action ? 4200 : 1800)
+  )
+}
+
+function runToastAction() {
+  const action = toastAction.value
+  toastVisible.value = false
+  toastAction.value = null
+  clearTimeout(toastTimer)
+  if (action && typeof action.fn === 'function') action.fn()
 }
 
 function persist() {
@@ -686,6 +1018,38 @@ function persist() {
   } catch (e) {
     /* 忽略存储异常 */
   }
+}
+
+function persistSettings() {
+  try {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ theme: theme.value, sound: soundEnabled.value })
+    )
+  } catch (e) {
+    /* 忽略存储异常 */
+  }
+}
+
+function persistHistory() {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.value.slice(0, 60)))
+  } catch (e) {
+    /* 忽略存储异常 */
+  }
+}
+
+function recordHistory(name) {
+  if (!name) return
+  const now = Date.now()
+  history.value = [{ name, ts: now }].concat(history.value.filter((item) => item.name !== name)).slice(0, 60)
+  persistHistory()
+}
+
+function daysSince(name) {
+  const hit = history.value.find((item) => item.name === name)
+  if (!hit) return Infinity
+  return Math.max(0, Math.floor((Date.now() - hit.ts) / DAY_MS))
 }
 
 function clearTimers() {
@@ -702,6 +1066,7 @@ function clearTimers() {
 function resetWheel() {
   clearTimers()
   spinning.value = false
+  settled.value = false
   noAnim.value = true
   rotation.value = 0
   pickedIndex.value = -1
@@ -712,8 +1077,37 @@ function resetWheel() {
   }, 80)
 }
 
+function clearExcluded() {
+  if (!excluded.value.length) return
+  excluded.value = []
+  showToast('已恢复全部菜品 ♡')
+}
+
+/* 权重抽取：刚吃过 / 本轮被排除的都降权，保证「不重复」的体感 */
+function pickIndex() {
+  const active = foods.value.filter((item) => !excluded.value.includes(item.id))
+  const pool = active.length >= MIN_FOODS ? active : foods.value.slice()
+  const weights = pool.map((item) => {
+    const days = daysSince(item.name)
+    let weight = 1
+    if (days === 0) weight = 0.1
+    else if (days === 1) weight = 0.35
+    else if (days <= 3) weight = 0.6
+    else if (days <= 7) weight = 0.85
+    if (pool.length > 1 && item.id === lastPickedId.value) weight *= 0.15
+    return weight
+  })
+  const total = weights.reduce((sum, value) => sum + value, 0)
+  let ticket = (randomInt(100000) / 100000) * total
+  for (let i = 0; i < pool.length; i += 1) {
+    ticket -= weights[i]
+    if (ticket <= 0) return foods.value.indexOf(pool[i])
+  }
+  return foods.value.indexOf(pool[pool.length - 1])
+}
+
 function spin() {
-  if (spinning.value || editorOpen.value || showResult.value || confirmOpen.value) return
+  if (spinning.value || editorOpen.value || showResult.value || settingsOpen.value || dialog.value) return
   const count = foods.value.length
   if (count < MIN_FOODS) {
     showToast('至少需要两道美味哦')
@@ -721,10 +1115,8 @@ function spin() {
   }
   toastVisible.value = false
 
-  let index = randomInt(count)
-  if (count > 1 && index === pickedIndex.value) {
-    index = (index + 1 + randomInt(count - 1)) % count
-  }
+  const index = pickIndex()
+  if (index < 0) return
 
   const step = 360 / count
   const center = (index + 0.5) * step
@@ -736,9 +1128,11 @@ function spin() {
   const target = rotation.value + turns * 360 + delta
 
   spinning.value = true
+  settled.value = false
   pickedIndex.value = -1
   noAnim.value = false
   vibrate(8)
+  playSpinSound()
 
   clearTimeout(applyTimer)
   clearTimeout(spinTimer)
@@ -750,14 +1144,24 @@ function spin() {
   })
 
   spinTimer = setTimeout(() => {
+    const picked = foods.value[index]
     spinning.value = false
+    settled.value = true
     pickedIndex.value = index
-    resultFood.value = foods.value[index]
+    resultFood.value = picked
+    resultDaysAgo.value = picked ? daysSince(picked.name) : Infinity
+    lastPickedId.value = picked ? picked.id : ''
     showResult.value = true
     if (promptMode.value === 'random') {
       promptText.value = pickPrompt(promptText.value)
     }
+    if (picked) recordHistory(picked.name)
     vibrate(14)
+    playDing()
+    clearTimeout(settleTimer)
+    settleTimer = setTimeout(() => {
+      settled.value = false
+    }, 460)
   }, SPIN_MS + 180)
 }
 
@@ -767,6 +1171,7 @@ function dismissResult() {
 
 function acceptResult() {
   showResult.value = false
+  excluded.value = []
   showToast('好耶，开饭啦 ♡')
 }
 
@@ -776,14 +1181,34 @@ function spinAgain() {
   againTimer = setTimeout(spin, 340)
 }
 
+/* 抽到了但不想吃：本轮排除它，再转一次 */
+function rejectResult() {
+  const picked = resultFood.value
+  if (!picked) return
+  if (!excluded.value.includes(picked.id)) excluded.value.push(picked.id)
+  showResult.value = false
+  const left = foods.value.filter((item) => !excluded.value.includes(item.id)).length
+  if (left < MIN_FOODS) {
+    excluded.value = []
+    showToast('只剩这些啦，重新开始 ♡')
+  } else {
+    showToast(`已排除「${picked.name}」`)
+  }
+  clearTimeout(againTimer)
+  againTimer = setTimeout(spin, 340)
+}
+
 function openEditor() {
   if (spinning.value) return
   toastVisible.value = false
   draft.value = ''
+  editingId.value = null
   editorOpen.value = true
+  focusPanel('editor')
 }
 
 function closeEditor() {
+  editingId.value = null
   editorOpen.value = false
 }
 
@@ -809,6 +1234,7 @@ function addFood(presetEmoji) {
     emoji: presetEmoji || emojiFor(name)
   })
   draft.value = ''
+  excluded.value = []
   persist()
   resetWheel()
   showToast(`已加入「${name}」`)
@@ -819,31 +1245,114 @@ function addPreset(preset) {
   addFood(preset.emoji)
 }
 
+function startEdit(item) {
+  if (!item) return
+  editingId.value = item.id
+  editName.value = item.name
+  editEmoji.value = item.emoji
+  nextTick(() => {
+    const input = document.querySelector('.edit-input')
+    if (input) {
+      input.focus({ preventScroll: true })
+      input.select()
+    }
+  })
+}
+
+function cancelEdit() {
+  editingId.value = null
+}
+
+function saveEdit() {
+  const item = foods.value.find((entry) => entry.id === editingId.value)
+  if (!item) {
+    editingId.value = null
+    return
+  }
+  const name = editName.value.trim().slice(0, 10)
+  if (!name) {
+    showToast('菜名不能为空')
+    return
+  }
+  if (foods.value.some((entry) => entry.id !== item.id && entry.name === name)) {
+    showToast('这道已经在菜单里啦')
+    return
+  }
+  item.name = name
+  item.short = shortFor(name)
+  item.emoji = editEmoji.value || emojiFor(name)
+  editingId.value = null
+  excluded.value = []
+  persist()
+  resetWheel()
+  showToast('已更新这道菜 ♡')
+}
+
 function removeFood(id) {
   if (foods.value.length <= MIN_FOODS) {
     showToast('至少保留两道美味')
     return
   }
+  const index = foods.value.findIndex((item) => item.id === id)
+  if (index < 0) return
+  const removed = foods.value[index]
   foods.value = foods.value.filter((item) => item.id !== id)
+  excluded.value = excluded.value.filter((value) => value !== id)
   persist()
   resetWheel()
+  showToast(`已移除「${removed.name}」`, {
+    label: '撤销',
+    fn: () => undoRemove(removed, index)
+  })
+}
+
+function undoRemove(item, index) {
+  if (!item) return
+  if (foods.value.length >= MAX_FOODS) {
+    showToast('菜单已满，无法撤销')
+    return
+  }
+  const at = Math.max(0, Math.min(index, foods.value.length))
+  foods.value.splice(at, 0, item)
+  persist()
+  resetWheel()
+  showToast('已撤销删除')
+}
+
+function openDialog(config) {
+  toastVisible.value = false
+  dialog.value = config
+  focusPanel('confirm')
+}
+
+function closeDialog() {
+  dialog.value = null
+}
+
+function confirmDialog() {
+  const current = dialog.value
+  dialog.value = null
+  if (current && typeof current.onConfirm === 'function') current.onConfirm()
 }
 
 function requestReset() {
-  toastVisible.value = false
-  confirmOpen.value = true
-}
-
-function cancelReset() {
-  confirmOpen.value = false
+  openDialog({
+    icon: '✦',
+    title: '恢复推荐菜单？',
+    desc: '当前菜单会被替换为十道推荐菜，已添加的内容不会保留。',
+    cancelText: '再想想',
+    confirmText: '恢复推荐',
+    onConfirm: doReset
+  })
 }
 
 function doReset() {
   foods.value = cloneDefaults()
   draft.value = ''
+  editingId.value = null
+  excluded.value = []
   persist()
   resetWheel()
-  confirmOpen.value = false
   showToast('已恢复推荐菜单')
 }
 
@@ -852,6 +1361,7 @@ function openPromptEditor() {
   promptDraftMode.value = promptMode.value
   promptDraft.value = promptText.value
   promptOpen.value = true
+  focusPanel('prompt')
 }
 
 function closePrompt() {
@@ -861,7 +1371,7 @@ function closePrompt() {
 function choosePromptMode(mode) {
   if (mode === promptDraftMode.value) return
   promptDraftMode.value = mode
-  if (mode === 'random' && !PROMPT_POOL.includes(promptDraft.value)) {
+  if (mode === 'random' && !promptPool().includes(promptDraft.value)) {
     promptDraft.value = pickPrompt(promptText.value)
   }
   if (mode === 'custom' && !promptDraft.value.trim()) {
@@ -896,6 +1406,274 @@ function savePrompt() {
   showToast(promptMode.value === 'random' ? '换了一句新提示 ♡' : '提示文字已更新 ♡')
 }
 
+/* ------------------------------------------------------------------ */
+/* 设置、主题与音效                                                   */
+/* ------------------------------------------------------------------ */
+function openSettings() {
+  if (spinning.value) return
+  toastVisible.value = false
+  importOpen.value = false
+  importText.value = ''
+  shareCode.value = ''
+  settingsOpen.value = true
+  focusPanel('settings')
+}
+
+function closeSettings() {
+  importOpen.value = false
+  settingsOpen.value = false
+}
+
+function setTheme(id) {
+  if (!THEMES.some((item) => item.id === id)) return
+  theme.value = id
+  persistSettings()
+}
+
+function toggleSound() {
+  soundEnabled.value = !soundEnabled.value
+  persistSettings()
+  if (soundEnabled.value) playDing()
+}
+
+let audioCtx = null
+
+function audioContext() {
+  if (!soundEnabled.value) return null
+  try {
+    const Ctor = window.AudioContext || window.webkitAudioContext
+    if (!Ctor) return null
+    if (!audioCtx) audioCtx = new Ctor()
+    if (audioCtx.state === 'suspended') audioCtx.resume()
+    return audioCtx
+  } catch (e) {
+    return null
+  }
+}
+
+function blip(ctx, at, freq, duration, volume) {
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(freq, at)
+  gain.gain.setValueAtTime(0.0001, at)
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.008)
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration)
+  osc.connect(gain).connect(ctx.destination)
+  osc.start(at)
+  osc.stop(at + duration + 0.03)
+}
+
+/* 转动时的嗒嗒声：间隔越来越大，像转盘在减速 */
+function playSpinSound() {
+  const ctx = audioContext()
+  if (!ctx) return
+  const start = ctx.currentTime + 0.02
+  const ticks = 22
+  for (let i = 0; i < ticks; i += 1) {
+    const progress = i / ticks
+    const at = start + (SPIN_MS / 1000) * Math.pow(progress, 1.7) * 0.98
+    blip(ctx, at, 1180 - progress * 380, 0.035, 0.05)
+  }
+}
+
+function playDing() {
+  const ctx = audioContext()
+  if (!ctx) return
+  const start = ctx.currentTime + 0.02
+  blip(ctx, start, 880, 0.28, 0.1)
+  blip(ctx, start + 0.09, 1320, 0.34, 0.06)
+}
+
+/* ------------------------------------------------------------------ */
+/* 分享与导入                                                         */
+/* ------------------------------------------------------------------ */
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch (e) {
+    /* 继续走兜底方案 */
+  }
+  try {
+    const area = document.createElement('textarea')
+    area.value = text
+    area.setAttribute('readonly', '')
+    area.style.position = 'fixed'
+    area.style.top = '0'
+    area.style.opacity = '0'
+    document.body.appendChild(area)
+    area.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(area)
+    return ok
+  } catch (e) {
+    return false
+  }
+}
+
+function currentShareCode() {
+  shareCode.value = encodeMenu(foods.value)
+  return shareCode.value
+}
+
+async function copyShareCode() {
+  const ok = await copyText(currentShareCode())
+  showToast(ok ? '分享码已复制 ♡' : '复制失败，长按输入框手动复制')
+}
+
+async function copyShareLink() {
+  const ok = await copyText(buildShareLink(currentShareCode()))
+  showToast(ok ? '分享链接已复制，发给朋友吧 ♡' : '复制失败，请手动复制分享码')
+}
+
+function openImport() {
+  importOpen.value = true
+  importText.value = ''
+}
+
+function submitImport() {
+  const list = decodeMenu(importText.value)
+  if (!list) {
+    showToast('分享码好像不完整，再检查一下')
+    return
+  }
+  applyImportedMenu(list)
+}
+
+function applyImportedMenu(list) {
+  foods.value = list
+  draft.value = ''
+  excluded.value = []
+  editingId.value = null
+  importOpen.value = false
+  importText.value = ''
+  settingsOpen.value = false
+  persist()
+  resetWheel()
+  showToast(`已导入 ${list.length} 道菜 ♡`)
+}
+
+async function shareResult() {
+  const picked = resultFood.value
+  if (!picked) return
+  const url = typeof location !== 'undefined' ? location.origin + location.pathname : ''
+  const text = `今天吃「${picked.name}」！转盘替我选的，不许反悔 ♡`
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: '今天吃什么', text, url })
+      return
+    } catch (e) {
+      if (e && e.name === 'AbortError') return
+    }
+  }
+  const ok = await copyText(`${text} ${url}`)
+  showToast(ok ? '已复制，去粘贴给朋友吧 ♡' : '分享失败，可以截图发给朋友')
+}
+
+/* ------------------------------------------------------------------ */
+/* 焦点与键盘                                                         */
+/* ------------------------------------------------------------------ */
+const FOCUSABLE =
+  'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+
+function focusPanel(name) {
+  nextTick(() => {
+    const el = document.querySelector(`[data-panel="${name}"]`)
+    if (el && typeof el.focus === 'function') el.focus({ preventScroll: true })
+  })
+}
+
+function trapFocus(event) {
+  const panel = document.querySelector('.mask.show .sheet, .mask.show .result-sheet, .confirm-card')
+  if (!panel) return
+  const nodes = Array.from(panel.querySelectorAll(FOCUSABLE)).filter(
+    (el) => el.offsetWidth > 0 || el.offsetHeight > 0
+  )
+  if (!nodes.length) return
+  const first = nodes[0]
+  const last = nodes[nodes.length - 1]
+  if (event.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+function isTyping(target) {
+  if (!target) return false
+  const tag = target.tagName
+  return tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable
+}
+
+function anyOverlay() {
+  return (
+    editorOpen.value ||
+    promptOpen.value ||
+    settingsOpen.value ||
+    showResult.value ||
+    Boolean(dialog.value)
+  )
+}
+
+function onKeydown(event) {
+  if (event.key === 'Escape') {
+    if (dialog.value) {
+      closeDialog()
+      return
+    }
+    if (settingsOpen.value) {
+      closeSettings()
+      return
+    }
+    if (promptOpen.value) {
+      closePrompt()
+      return
+    }
+    if (editorOpen.value) {
+      closeEditor()
+      return
+    }
+    if (showResult.value) {
+      dismissResult()
+      return
+    }
+    return
+  }
+  if (event.key === 'Tab') {
+    trapFocus(event)
+    return
+  }
+  if ((event.key === ' ' || event.code === 'Space') && !isTyping(event.target) && !anyOverlay()) {
+    event.preventDefault()
+    spin()
+  }
+}
+
+function checkSharedMenu() {
+  if (typeof location === 'undefined') return
+  if (!location.hash || location.hash.indexOf('SF1') < 0) return
+  const list = decodeMenu(location.hash)
+  if (!list) return
+  try {
+    window.history.replaceState(null, '', location.pathname + location.search)
+  } catch (e) {
+    /* 忽略历史记录异常 */
+  }
+  openDialog({
+    icon: '♡',
+    title: '朋友分享了一份菜单',
+    desc: `共 ${list.length} 道菜，要替换当前的菜单吗？`,
+    cancelText: '先不用',
+    confirmText: '导入',
+    onConfirm: () => applyImportedMenu(list)
+  })
+}
+
 function handleResize() {
   const size = getWindowSize()
   windowWidth.value = size.width
@@ -918,7 +1696,12 @@ watch(promptOpen, (open) => {
   if (!open) promptKeyboardOffset.value = 0
 })
 
-watch([editorOpen, showResult, confirmOpen, promptOpen], (values) => {
+watch(theme, (value) => {
+  if (typeof document === 'undefined') return
+  document.documentElement.dataset.theme = value
+})
+
+watch([editorOpen, showResult, promptOpen, settingsOpen, dialog], (values) => {
   const locked = values.some(Boolean)
   if (typeof document === 'undefined') return
   document.documentElement.classList.toggle('overlay-open', locked)
@@ -929,17 +1712,26 @@ onMounted(() => {
   handleResize()
   window.addEventListener('resize', handleResize, { passive: true })
   window.addEventListener('orientationchange', handleResize, { passive: true })
+  window.addEventListener('keydown', onKeydown)
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', syncPromptKeyboard, { passive: true })
     window.visualViewport.addEventListener('scroll', syncPromptKeyboard, { passive: true })
   }
+  document.documentElement.dataset.theme = theme.value
+  clockTimer = setInterval(() => {
+    nowHour.value = new Date().getHours()
+  }, 60000)
+  checkSharedMenu()
 })
 
 onBeforeUnmount(() => {
   clearTimers()
   clearTimeout(toastTimer)
+  clearTimeout(settleTimer)
+  clearInterval(clockTimer)
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('orientationchange', handleResize)
+  window.removeEventListener('keydown', onKeydown)
   if (window.visualViewport) {
     window.visualViewport.removeEventListener('resize', syncPromptKeyboard)
     window.visualViewport.removeEventListener('scroll', syncPromptKeyboard)
@@ -958,6 +1750,16 @@ onBeforeUnmount(() => {
   --ink-soft: #8f6f95;
   --lav: #b98ad4;
   --rose: #b26791;
+  --grad-btn: linear-gradient(135deg, #c493e0 0%, #ed97bc 100%);
+  --grad-soft: linear-gradient(135deg, #f1d9fb 0%, #fbd9e8 100%);
+  --pin-1: #e8b4f2;
+  --pin-2: #eda5d4;
+  --pin-3: #f08db8;
+  --rim: linear-gradient(150deg, #ffffff 0%, #f7e9fb 28%, #e8d0f4 52%, #fff6fb 78%, #f2dff7 100%);
+  --hub-grad: conic-gradient(from 205deg, #f7cfe2, #d9bcf0, #fbe0ee, #f7cfe2);
+  --page-bg: radial-gradient(420px 330px at 84% 2%, rgba(249, 213, 235, 0.62), rgba(249, 213, 235, 0) 66%),
+    radial-gradient(480px 430px at 4% 46%, rgba(226, 208, 250, 0.9), rgba(226, 208, 250, 0) 70%),
+    linear-gradient(168deg, #faf5fe 0%, #f9f0fb 42%, #f5edfc 72%, #fcf5fb 100%);
   position: relative;
   width: 100%;
   max-width: 480px;
@@ -966,10 +1768,31 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
-  background:
-    radial-gradient(420px 330px at 84% 2%, rgba(249, 213, 235, 0.62), rgba(249, 213, 235, 0) 66%),
-    radial-gradient(480px 430px at 4% 46%, rgba(226, 208, 250, 0.9), rgba(226, 208, 250, 0) 70%),
-    linear-gradient(168deg, #faf5fe 0%, #f9f0fb 42%, #f5edfc 72%, #fcf5fb 100%);
+  background: var(--page-bg);
+}
+.page[data-theme='sakura'] {
+  --grad-btn: linear-gradient(135deg, #f0a2bf 0%, #f6b78e 100%);
+  --grad-soft: linear-gradient(135deg, #ffe0ea 0%, #ffe8d8 100%);
+  --pin-1: #ffc7da;
+  --pin-2: #f9a9c1;
+  --pin-3: #ef8aa6;
+  --rim: linear-gradient(150deg, #ffffff 0%, #fde8f0 30%, #f7cfdd 55%, #fff7fa 80%, #fbdbe7 100%);
+  --hub-grad: conic-gradient(from 205deg, #ffd3e2, #f9c0a8, #ffe6ef, #ffd3e2);
+  --page-bg: radial-gradient(420px 330px at 84% 2%, rgba(255, 205, 224, 0.7), rgba(255, 205, 224, 0) 66%),
+    radial-gradient(480px 430px at 4% 46%, rgba(255, 224, 210, 0.85), rgba(255, 224, 210, 0) 70%),
+    linear-gradient(168deg, #fff7fa 0%, #fff1f4 42%, #fdf0ea 72%, #fff8fb 100%);
+}
+.page[data-theme='cream'] {
+  --grad-btn: linear-gradient(135deg, #e7b98a 0%, #e8a7b7 100%);
+  --grad-soft: linear-gradient(135deg, #fbe8cd 0%, #f7dfe4 100%);
+  --pin-1: #f8dcaf;
+  --pin-2: #f0c39a;
+  --pin-3: #e9a98d;
+  --rim: linear-gradient(150deg, #ffffff 0%, #fdf3e2 30%, #f3ddc2 55%, #fffaf2 80%, #f7e6d1 100%);
+  --hub-grad: conic-gradient(from 205deg, #fbe3c6, #e9c8ef, #fdf0dc, #fbe3c6);
+  --page-bg: radial-gradient(420px 330px at 84% 2%, rgba(255, 231, 196, 0.66), rgba(255, 231, 196, 0) 66%),
+    radial-gradient(480px 430px at 4% 46%, rgba(238, 219, 250, 0.8), rgba(238, 219, 250, 0) 70%),
+    linear-gradient(168deg, #fffaf2 0%, #fdf5e9 42%, #f8f0e6 72%, #fffaf4 100%);
 }
 .bg-kitty {
   position: absolute;
@@ -1161,7 +1984,7 @@ onBeforeUnmount(() => {
 /* 转盘                                                               */
 /* ------------------------------------------------------------------ */
 .wheel-section {
-  margin-top: 16px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1223,7 +2046,7 @@ onBeforeUnmount(() => {
   height: 100%;
   border-radius: 50%;
   padding: 11px;
-  background: linear-gradient(150deg, #ffffff 0%, #f7e9fb 28%, #e8d0f4 52%, #fff6fb 78%, #f2dff7 100%);
+  background: var(--rim);
   box-shadow:
     0 26px 50px rgba(128, 80, 151, 0.22),
     0 8px 18px rgba(139, 91, 160, 0.12),
@@ -1322,7 +2145,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   padding: 5px;
   background: linear-gradient(135deg, #f7cfe2 0%, #d9bcf0 100%);
-  background: conic-gradient(from 205deg, #f7cfe2, #d9bcf0, #fbe0ee, #f7cfe2);
+  background: var(--hub-grad);
   box-shadow:
     0 12px 26px rgba(135, 82, 160, 0.26),
     0 3px 7px rgba(135, 82, 160, 0.14),
@@ -1379,7 +2202,7 @@ onBeforeUnmount(() => {
   height: 100%;
 }
 .spin-link {
-  margin-top: 13px;
+  margin-top: 11px;
   height: 31px;
   display: flex;
   align-items: center;
@@ -1417,8 +2240,8 @@ onBeforeUnmount(() => {
 /* ------------------------------------------------------------------ */
 .menu-card {
   width: 100%;
-  margin-top: 16px;
-  padding: 13px 15px;
+  margin-top: 12px;
+  padding: 11px 15px;
   border-radius: 22px;
   background: linear-gradient(158deg, rgba(255, 255, 255, 0.72), rgba(255, 248, 253, 0.52));
   border: 1px solid rgba(255, 255, 255, 0.95);
@@ -1464,11 +2287,11 @@ onBeforeUnmount(() => {
 .menu-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 7px;
-  margin-top: 11px;
+  gap: 6px;
+  margin-top: 10px;
 }
 .menu-item {
-  height: 54px;
+  height: 50px;
   min-width: 0;
   padding: 4px 3px;
   border-radius: 15px;
@@ -1508,7 +2331,7 @@ onBeforeUnmount(() => {
 }
 .footer {
   margin-top: auto;
-  padding: 18px 0 16px;
+  padding: 8px 0 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1732,7 +2555,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #c79ae2 0%, #ee9dc0 100%);
+  background: var(--grad-btn);
   box-shadow: 0 8px 16px rgba(202, 133, 181, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.28);
 }
 .add-btn svg {
@@ -1834,7 +2657,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   letter-spacing: 1px;
   color: #fff;
-  background: linear-gradient(135deg, #c493e0 0%, #ed97bc 100%);
+  background: var(--grad-btn);
   box-shadow: 0 10px 20px rgba(200, 130, 177, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
@@ -1924,7 +2747,7 @@ onBeforeUnmount(() => {
   font-weight: 650;
   letter-spacing: 0.3px;
   color: #9a5f8d;
-  background: linear-gradient(135deg, #f1d9fb 0%, #fbd9e8 100%);
+  background: var(--grad-soft);
   box-shadow: 0 6px 14px rgba(190, 140, 190, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.55);
 }
 .shuffle-spark {
@@ -2138,7 +2961,7 @@ onBeforeUnmount(() => {
 }
 .btn.solid {
   color: #fff;
-  background: linear-gradient(135deg, #c493e0 0%, #ed97bc 100%);
+  background: var(--grad-btn);
   box-shadow: 0 12px 24px rgba(198, 128, 175, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.28);
 }
 .confetti {
@@ -2380,6 +3203,436 @@ onBeforeUnmount(() => {
   .toast-enter-active,
   .toast-leave-active {
     transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 1.1 新增：顶部按钮、历史、排除、编辑、设置                          */
+/* ------------------------------------------------------------------ */
+.topbar-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.icon-gear {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.lede-row {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.spin-link {
+  flex: none;
+}
+.menu-edit {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.exclude-reset {
+  margin-top: 8px;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  color: #b0789b;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(176, 120, 155, 0.45);
+}
+
+/* 菜单格：今天吃过的打个勾 */
+.menu-item {
+  position: relative;
+}
+.menu-item.eaten {
+  opacity: 0.72;
+}
+.menu-item.eaten::after {
+  content: '✓';
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #d9b7e8;
+  color: #fff;
+  font-size: 8px;
+  line-height: 12px;
+  text-align: center;
+}
+.menu-history {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 5px;
+  border-top: 1px dashed rgba(170, 130, 190, 0.18);
+  font-size: 9.5px;
+  color: #a98bb3;
+}
+.menu-history-label {
+  flex: none;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #c0a2c8;
+}
+.menu-history-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 转盘停下时 hub 回弹 */
+@keyframes hubPop {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  35% {
+    transform: translate(-50%, -50%) scale(1.09);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+.hub.is-settled {
+  animation: hubPop 0.46s cubic-bezier(0.22, 0.9, 0.3, 1.3);
+}
+
+/* 菜单行内编辑 */
+.food-row.editing {
+  padding: 6px 0;
+}
+.edit-main {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.edit-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 11px;
+  border: 1px solid rgba(214, 170, 228, 0.8);
+  background: #fff;
+  font-size: 16px;
+  color: #5e3c5d;
+  outline: none;
+}
+.edit-input:focus {
+  border-color: rgba(196, 140, 214, 0.95);
+  box-shadow: 0 0 0 3px rgba(229, 195, 241, 0.26);
+}
+.edit-ok,
+.edit-cancel {
+  flex: none;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.edit-ok {
+  color: #fff;
+  background: var(--grad-btn);
+  box-shadow: 0 6px 12px rgba(198, 128, 175, 0.24);
+}
+.edit-cancel {
+  color: #9a7ba2;
+  background: #f6edfa;
+}
+.emoji-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 2px;
+  padding: 2px 0 8px;
+  scrollbar-width: none;
+}
+.emoji-strip::-webkit-scrollbar {
+  height: 0;
+}
+.emoji-chip {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  background: #f9f1fc;
+  box-shadow: inset 0 0 0 1px rgba(232, 214, 240, 0.9);
+}
+.emoji-chip.active {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px rgba(197, 145, 216, 0.9), 0 4px 10px rgba(160, 110, 180, 0.14);
+}
+.food-avatar,
+.food-name {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.food-avatar {
+  background: linear-gradient(145deg, #fff, #f8ecfb);
+}
+.food-name {
+  text-align: left;
+}
+
+/* 设置面板 */
+.settings-sheet {
+  max-height: 92vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.settings-sheet::-webkit-scrollbar {
+  width: 0;
+}
+.setting-block {
+  margin-top: 18px;
+}
+.setting-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #a887b4;
+  text-transform: uppercase;
+}
+.setting-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 10.5px;
+  line-height: 1.6;
+  letter-spacing: 0.2px;
+  color: #b193b9;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(250, 242, 253, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(236, 220, 244, 0.7);
+}
+.setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.switch {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 27px;
+  border-radius: 999px;
+  background: #e7d9ee;
+  transition: background 0.24s ease;
+}
+.switch.on {
+  background: var(--grad-btn);
+}
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(120, 80, 140, 0.22);
+  transition: transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+.switch.on .knob {
+  transform: translateX(19px);
+}
+.theme-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 9px;
+}
+.theme-chip {
+  flex: 1;
+  height: 44px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #8f6f95;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(229, 214, 238, 0.9);
+}
+.theme-chip.active {
+  color: #6f4a7e;
+  font-weight: 700;
+  background: #fff;
+  box-shadow: inset 0 0 0 1.6px rgba(190, 140, 212, 0.95), 0 6px 14px rgba(160, 110, 180, 0.12);
+}
+.theme-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+.share-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 11px;
+}
+.mini-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff;
+  background: var(--grad-btn);
+  box-shadow: 0 8px 16px rgba(198, 128, 175, 0.2);
+}
+.mini-btn.ghost {
+  color: #9a6aa2;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 0 0 1px rgba(215, 185, 228, 0.9);
+}
+.mini-btn.tiny {
+  flex: none;
+  width: 56px;
+  height: 34px;
+  font-size: 11px;
+  box-shadow: none;
+}
+.code-box {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.code-input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(224, 200, 235, 0.8);
+  background: #f8f0fb;
+  font-size: 11px;
+  color: #7c5a86;
+  outline: none;
+}
+.import-box {
+  margin-top: 10px;
+}
+.import-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(224, 200, 235, 0.8);
+  background: #f8f0fb;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #5e3c5d;
+  outline: none;
+  resize: none;
+}
+.import-input:focus {
+  border-color: rgba(214, 160, 222, 0.9);
+  box-shadow: 0 0 0 3px rgba(229, 195, 241, 0.24);
+}
+.import-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* 结果页底部小链接 */
+.result-links {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.result-link {
+  padding: 6px 2px;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: #b0789b;
+}
+.result-link-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #dcc2e4;
+}
+
+/* 带操作的轻提示 */
+.toast.has-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 10px;
+  pointer-events: auto;
+}
+.toast-text {
+  max-width: 210px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toast-action {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffd9ea;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.mini-btn,
+.theme-chip,
+.edit-ok,
+.edit-cancel,
+.emoji-chip,
+.switch,
+.result-link,
+.exclude-reset {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.mini-btn:active,
+.theme-chip:active,
+.edit-ok:active,
+.edit-cancel:active,
+.emoji-chip:active,
+.result-link:active {
+  transform: scale(0.96);
+  opacity: 0.86;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub.is-settled {
     animation: none !important;
   }
 }

@@ -35,6 +35,26 @@ body {
   min-height: 100dvh;
 }
 
+/* 主题切换：页面外圈的底色也跟着变 */
+html[data-theme='sakura'] {
+  background: #fdf0f4;
+}
+html[data-theme='sakura'] body {
+  background:
+    radial-gradient(700px 500px at 15% 8%, #ffe6ee 0%, rgba(255, 230, 238, 0) 62%),
+    radial-gradient(700px 600px at 86% 35%, #fff0e4 0%, rgba(255, 240, 228, 0) 64%),
+    linear-gradient(160deg, #fdeef3 0%, #fff4f1 45%, #fdeef4 100%);
+}
+html[data-theme='cream'] {
+  background: #f7efe2;
+}
+html[data-theme='cream'] body {
+  background:
+    radial-gradient(700px 500px at 15% 8%, #fdf2e2 0%, rgba(253, 242, 226, 0) 62%),
+    radial-gradient(700px 600px at 86% 35%, #f6e9fb 0%, rgba(246, 233, 251, 0) 64%),
+    linear-gradient(160deg, #fbf3e6 0%, #f9f1e9 45%, #f6eef8 100%);
+}
+
 button {
   margin: 0;
   padding: 0;

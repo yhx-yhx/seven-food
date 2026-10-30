@@ -1,7 +1,7 @@
 {
   "name": "sevenfood",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "今天吃什么 · Hello Kitty 浅紫色美食转盘",
   "scripts": {
